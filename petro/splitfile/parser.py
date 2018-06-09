@@ -1,4 +1,4 @@
-__all__ = ['parse']
+from .expressions import *
 
 def parse(lines):
     '''
@@ -31,16 +31,13 @@ def parse(lines):
     line_number = 1
     for line in lines:
         t = _token(line)
-        if len(t) == 0:
-            continue
-        if _is_error(t):
-            e = _public_error(t, line_number)
-        else:
-            e = _expression(t)
-            if _is_error(e):
-                e = _public_error(e, line_number)
+        if t:
+            if not _is_error(t):
+                e = _expression(t)
+            else:
+                e = t
+            yield (line_number,) + e
         line_number += 1
-        yield e
 
 def _token(line):
     '''
@@ -129,7 +126,7 @@ def _token(line):
         if quote_start == -1:
             token.append(line[token_start:])
         else:
-            return _syntax_error()
+            return _error()
 
     return token
  
@@ -148,7 +145,7 @@ def _strip_comments(line):
 def _expression(token):
     for _parser in _parsers:
         e = _parser(token)
-        if not e is None:
+        if e is not None:
             return e
 
 def _parseStart(token):
@@ -170,14 +167,14 @@ def _parseStart(token):
     if token[0] != 'start':
         return None
     if len(token) == 1:
-        return _syntax_error()
+        return _error()
     cids = _parseCategoryIds(token[1:-1])
     if _is_error(cids):
         return cids
     time = _parseTime(token[-1])
     if _is_error(time):
         return time
-    return ('start', cids, time)
+    return (START, cids, time)
 
 def _parseLaps(token):
     '''
@@ -202,17 +199,17 @@ def _parseLaps(token):
     if token[0] != 'laps':
         return None
     if len(token) == 1:
-        return _syntax_error()
+        return _error()
     cids = _parseCategoryIds(token[1:-1])
     if _is_error(cids):
         return cids
     try:
         laps = int(token[-1])
     except ValueError:
-        return _syntax_error()
+        return _error()
     if laps < 1:
-        return _syntax_error()
-    return ('laps', cids, laps)
+        return _error()
+    return (LAPS, cids, laps)
 
 def _parseSplit(token):
     '''
@@ -230,14 +227,14 @@ def _parseSplit(token):
     ('error',)
     '''
     if len(token) < 2:
-        return _syntax_error()
+        return _error()
     bibs = _parseBibs(token[:-1])
     if _is_error(bibs):
         return bibs
     time = _parseTime(token[-1])
     if _is_error(time):
         return time
-    return ('split', bibs, time)
+    return (SPLIT, bibs, time)
 
 def _parseReglist(token):
     '''
@@ -258,11 +255,11 @@ def _parseReglist(token):
     if token[0] != 'reglist':
         return None
     if len(token) != 2:
-        return _syntax_error()
+        return _error()
     path = token[1]
     path = path.strip('\'')
     path = path.strip('\"')
-    return ('reglist', path)
+    return (REGLIST, path)
 
 def _parseCategoryIds(token):
     '''
@@ -282,10 +279,10 @@ def _parseCategoryIds(token):
     try:
         cids = list(map(int, token))
     except ValueError:
-        return _syntax_error()
+        return _error()
     for cid in cids:
         if cid < 1:
-            return _syntax_error()
+            return _error()
     return cids
 
 import time
@@ -309,7 +306,7 @@ def _parseTime(token):
     try:
         tm = time.strptime(token, '%H:%M:%S')
     except ValueError:
-        return _syntax_error()
+        return _error()
     return (tm.tm_hour, tm.tm_min, tm.tm_sec)
 
 def _parseBibs(token):
@@ -332,10 +329,10 @@ def _parseBibs(token):
     try:
         bibs = list(map(int, token))
     except ValueError:
-        return _syntax_error()
+        return _error()
     for bib in bibs:
         if bib < 0:
-            return _syntax_error()
+            return _error()
     return bibs
 
 def _parseItt(token):
@@ -348,10 +345,11 @@ def _parseItt(token):
     '''
     if token[0] != 'itt':
         return None
-    elif len(token) != 1:
-        return _syntax_error()
-    else:
-        return ('itt',)
+
+    if len(token) != 1:
+        return _error()
+
+    return (ITT,)
     
 _parsers = [
     _parseStart,
@@ -359,15 +357,12 @@ _parsers = [
     _parseReglist,
     _parseSplit,
     _parseItt,
-    lambda _: _syntax_error()
+    lambda _: _error()
 ]
 
-def _syntax_error():
-    return ('error',)
+def _error():
+    return (SYNTAX_ERROR,)
 
 def _is_error(exp):
-    return isinstance(exp, tuple) and len(exp) > 0 and exp[0] == 'error'
-
-def _public_error(error, line_number):
-    return ('SyntaxError', line_number)
+    return isinstance(exp, tuple) and len(exp) > 0 and exp[0] == SYNTAX_ERROR
 
