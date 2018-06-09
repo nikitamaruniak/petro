@@ -27,6 +27,9 @@ def parse(lines):
         * Empty lines have no special meaning.
         * Trailing spaces and tabs are ignored.
         * Sequences of spaces or tabs have the same meaning as a one symbol.
+
+    >>> list(parse(['itt', '', 'foo', 'laps 5', 'start 1 12:13:14', '10 12:35:00']))
+    [(1, 'itt'), (3, 'error'), (4, 'laps', [], 5), (5, 'start', [1], (12, 13, 14)), (6, 'split', [10], (12, 35, 0))]
     '''
     line_number = 1
     for line in lines:
@@ -355,8 +358,8 @@ _parsers = [
     _parseStart,
     _parseLaps,
     _parseReglist,
-    _parseSplit,
     _parseItt,
+    _parseSplit,
     lambda _: _error()
 ]
 
