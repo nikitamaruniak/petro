@@ -80,6 +80,9 @@ def _token(line):
     ['foo', 'baz-bar']
     >>> _token('foo baz --bar qux')
     ['foo', 'baz']
+
+    >>> _token('foo\\n')
+    ['foo']
     '''
     n = len(line)
     comment_start = -1
@@ -91,7 +94,7 @@ def _token(line):
     token = []
     while i < n:
         c = line[i]
-        is_white = c == ' ' or c == '\t'
+        is_white = c == ' ' or c == '\t' or c == '\n'
         if is_white:
             if quote_start == -1 and token_start != -1:
                 token.append(line[token_start:i])
