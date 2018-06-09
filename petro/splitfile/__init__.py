@@ -1,1 +1,1 @@
-from file import SplitFile
+from .file import SplitFile

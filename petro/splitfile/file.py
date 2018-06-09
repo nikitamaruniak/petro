@@ -8,11 +8,11 @@ class SplitFile(object):
 
     @classmethod
     def open(cls, file_path):
-        expressions = list(parse(_file_iter(file_name)))
+        expressions = list(parse(_file_iter(file_path)))
         return cls(expressions)
 
     def __iter__(self):
-        return (for e in self._expressions)
+        return (e for e in self._expressions)
         
 def _file_iter(file_path):
     with open(file_path, 'r') as f:
