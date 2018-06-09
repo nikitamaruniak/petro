@@ -12,6 +12,7 @@ class SplitFile(object):
         self._splits = []
         self._laps = {}
         self._start = {}
+        self._finish = {}
         self._reglist = None
         self._errors = []
         self._itt = False
@@ -21,7 +22,8 @@ class SplitFile(object):
             REGLIST: SplitFile._handle_reglist,
             SPLIT: SplitFile._handle_split,
             LAPS: SplitFile._handle_laps,
-            START: SplitFile._handle_start
+            START: SplitFile._handle_start,
+            FINISH: SplitFile._handle_finish
         }
         for e in expressions:
             e_type = e[1]
@@ -69,6 +71,16 @@ class SplitFile(object):
             else:
                 self._start[c] = time
 
+    def _handle_finish(self, e):
+        __, __, categories, time = e
+        if not categories:
+            raise NotImplementedError
+        for c in categories:
+            if c in self._finish:
+                self._report_syntax_error(e)
+            else:
+                self._finish[c] = time
+
     def _report_syntax_error(self, e):
         line_number = e[0]
         self._errors.append((line_number, SYNTAX_ERROR))
@@ -98,6 +110,11 @@ class SplitFile(object):
     def start(self):
         for c in self._start.keys():
             yield (c, self._start[c])
+
+    @property
+    def finish(self):
+        for c in self._finish.keys():
+            yield (c, self._finish[c])
 
 def _file_iter(file_path):
     with open(file_path, mode='rtU', encoding='utf-8') as f:

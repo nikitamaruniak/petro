@@ -36,3 +36,6 @@ class SplitFile_acceptance_test_unix(unittest.TestCase):
 
     def test_start(self):
         self.assertEqual(list(self._sf.start), [(1, (11, 5, 22)), (2, (11, 6, 30))])
+
+    def test_finish(self):
+        self.assertEqual(list(self._sf.finish), [(1, (13, 0, 0)), (2, (13, 0, 0))])

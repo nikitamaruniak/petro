@@ -8,6 +8,7 @@ def parse(lines):
         Supported expressions:
         <bib> [<bib> ... <bib>] <time>
         start [<cid> ... <cid>] <time>
+        finish [<cid> ... <cid>] <time>
         laps [<cid> ... <cid>] <laps>
         reglist <path>
         itt
@@ -181,6 +182,34 @@ def _parseStart(token):
     if _is_error(time):
         return time
     return (START, cids, time)
+
+def _parseFinish(token):
+    '''
+    >>> _parseFinish(['foo']) # is None
+    >>> _parseFinish(['finish', '12:00:00'])
+    ('finish', [], (12, 0, 0))
+    >>> _parseFinish(['finish', '1', '12:00:00'])
+    ('finish', [1], (12, 0, 0))
+    >>> _parseFinish(['finish', '1', '2', '3', '12:00:00'])
+    ('finish', [1, 2, 3], (12, 0, 0))
+    >>> _parseFinish(['finish'])
+    ('error',)
+    >>> _parseFinish(['finish', 'foo', '12:00:00'])
+    ('error',)
+    >>> _parseFinish(['finish', '1', 'foo'])
+    ('error',)
+    '''
+    if token[0] != 'finish':
+        return None
+    if len(token) == 1:
+        return _error()
+    cids = _parseCategoryIds(token[1:-1])
+    if _is_error(cids):
+        return cids
+    time = _parseTime(token[-1])
+    if _is_error(time):
+        return time
+    return (FINISH, cids, time)
 
 def _parseLaps(token):
     '''
@@ -359,6 +388,7 @@ def _parseItt(token):
     
 _parsers = [
     _parseStart,
+    _parseFinish,
     _parseLaps,
     _parseReglist,
     _parseItt,
