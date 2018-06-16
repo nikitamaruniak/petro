@@ -1,4 +1,6 @@
 .PHONY: test
 
+PYTHONPATH=$(abspath ./src)
+
 test:
-	python -m unittest discover -p '*_test.py'
+	PYTHONPATH=$(PYTHONPATH) python -m unittest discover -p '*_test.py' -s tests

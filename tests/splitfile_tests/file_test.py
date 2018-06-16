@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from .file import SplitFile
+from splitfile import SplitFile
 
 class SplitFile_acceptance_test_unix(unittest.TestCase):
 

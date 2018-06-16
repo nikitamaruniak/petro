@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from . import Reglist
+from reglist import Reglist
 
 class ReglistTests(unittest.TestCase):
     def setUp(self):
