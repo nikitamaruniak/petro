@@ -2,13 +2,14 @@ import csv
 
 from .participant import Participant
 
+
 class Reglist:
     def __init__(self, categories, participants):
         self._bibs = {}
         self._categories = {}
         for cid, cname in categories:
             self._categories[cid] = (cname, [])
-        
+
         for p in participants:
             __, ps = self._categories[p.category_id]
             ps.append(p)
@@ -35,12 +36,11 @@ class Reglist:
             return None
 
     @staticmethod
-    def open(filePath):
+    def open(file_path):
         participants = []
         categories = []
         category_id = None
-        category_name = None
-        for row in _csv_lines(filePath):
+        for row in _csv_lines(file_path):
             if row[0] != '' and row[1] == '':
                 category_name = row[0]
                 category_id = category_id + 1 if category_id else 1
@@ -52,6 +52,7 @@ class Reglist:
                 participants.append(p)
         return Reglist(categories, participants)
 
+
 def _csv_lines(filepath):
     with open(filepath, mode='rt', encoding='cp1251') as f:
         reader = csv.reader(
@@ -59,6 +60,6 @@ def _csv_lines(filepath):
             delimiter=';',
             lineterminator='\r\n',
             strict=True)
-            
+
         for row in reader:
             yield row

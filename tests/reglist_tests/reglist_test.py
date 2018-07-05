@@ -3,6 +3,7 @@ import os
 
 from reglist import Reglist
 
+
 class ReglistTests(unittest.TestCase):
     def setUp(self):
         test_file_path = os.path.join(

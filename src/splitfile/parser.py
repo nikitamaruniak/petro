@@ -1,7 +1,10 @@
+import time
+
 from .expressions import *
 
+
 def parse(lines):
-    '''
+    """
     Converts an iterator of strings into an iterator of expressions.
 
     Syntax:
@@ -31,7 +34,7 @@ def parse(lines):
 
     >>> list(parse(['itt', '', 'foo', 'laps 5', 'start 1 12:13:14', '10 12:35:00']))
     [(1, 'itt'), (3, 'error'), (4, 'laps', [], 5), (5, 'start', [1], (12, 13, 14)), (6, 'split', [10], (12, 35, 0))]
-    '''
+    """
     line_number = 1
     for line in lines:
         t = _token(line)
@@ -43,8 +46,9 @@ def parse(lines):
             yield (line_number,) + e
         line_number += 1
 
+
 def _token(line):
-    '''
+    """
     >>> _token('')
     []
     >>> _token('\t')
@@ -84,13 +88,12 @@ def _token(line):
 
     >>> _token('foo\\n')
     ['foo']
-    '''
+    """
     n = len(line)
     comment_start = -1
     token_start = -1
     quote_start = -1
     quote_start_type = None
-    doublequote_start = -1
     i = 0
     token = []
     while i < n:
@@ -136,18 +139,20 @@ def _token(line):
             return _error()
 
     return token
- 
+
+
 def _strip_comments(line):
-    '''
+    """
     >>> _strip_comments('foo')
     'foo'
     >>> _strip_comments('foo --baz bar')
     'foo '
-    '''
+    """
     comment_start = line.find('--')
     if comment_start != -1:
         line = line[:comment_start]
     return line
+
 
 def _expression(token):
     for _parser in _parsers:
@@ -155,87 +160,90 @@ def _expression(token):
         if e is not None:
             return e
 
-def _parseStart(token):
-    '''
-    >>> _parseStart(['foo']) # is None
-    >>> _parseStart(['start', '12:00:00'])
+
+def _parse_start(token):
+    """
+    >>> _parse_start(['foo']) # is None
+    >>> _parse_start(['start', '12:00:00'])
     ('start', [], (12, 0, 0))
-    >>> _parseStart(['start', '1', '12:00:00'])
+    >>> _parse_start(['start', '1', '12:00:00'])
     ('start', [1], (12, 0, 0))
-    >>> _parseStart(['start', '1', '2', '3', '12:00:00'])
+    >>> _parse_start(['start', '1', '2', '3', '12:00:00'])
     ('start', [1, 2, 3], (12, 0, 0))
-    >>> _parseStart(['start'])
+    >>> _parse_start(['start'])
     ('error',)
-    >>> _parseStart(['start', 'foo', '12:00:00'])
+    >>> _parse_start(['start', 'foo', '12:00:00'])
     ('error',)
-    >>> _parseStart(['start', '1', 'foo'])
+    >>> _parse_start(['start', '1', 'foo'])
     ('error',)
-    '''
+    """
     if token[0] != 'start':
         return None
     if len(token) == 1:
         return _error()
-    cids = _parseCategoryIds(token[1:-1])
+    cids = _parse_category_ids(token[1:-1])
     if _is_error(cids):
         return cids
-    time = _parseTime(token[-1])
-    if _is_error(time):
-        return time
-    return (START, cids, time)
+    start_time = _parse_time(token[-1])
+    if _is_error(start_time):
+        return start_time
+    return START, cids, start_time
 
-def _parseFinish(token):
-    '''
-    >>> _parseFinish(['foo']) # is None
-    >>> _parseFinish(['finish', '12:00:00'])
+
+def _parse_finish(token):
+    """
+    >>> _parse_finish(['foo']) # is None
+    >>> _parse_finish(['finish', '12:00:00'])
     ('finish', [], (12, 0, 0))
-    >>> _parseFinish(['finish', '1', '12:00:00'])
+    >>> _parse_finish(['finish', '1', '12:00:00'])
     ('finish', [1], (12, 0, 0))
-    >>> _parseFinish(['finish', '1', '2', '3', '12:00:00'])
+    >>> _parse_finish(['finish', '1', '2', '3', '12:00:00'])
     ('finish', [1, 2, 3], (12, 0, 0))
-    >>> _parseFinish(['finish'])
+    >>> _parse_finish(['finish'])
     ('error',)
-    >>> _parseFinish(['finish', 'foo', '12:00:00'])
+    >>> _parse_finish(['finish', 'foo', '12:00:00'])
     ('error',)
-    >>> _parseFinish(['finish', '1', 'foo'])
+    >>> _parse_finish(['finish', '1', 'foo'])
     ('error',)
-    '''
+    """
     if token[0] != 'finish':
         return None
     if len(token) == 1:
         return _error()
-    cids = _parseCategoryIds(token[1:-1])
+    cids = _parse_category_ids(token[1:-1])
     if _is_error(cids):
         return cids
-    time = _parseTime(token[-1])
+    time = _parse_time(token[-1])
     if _is_error(time):
         return time
-    return (FINISH, cids, time)
+    return FINISH, cids, time
 
-def _parseLaps(token):
-    '''
-    >>> _parseLaps(['foo']) # is None
-    >>> _parseLaps(['laps', '5'])
+
+def _parse_laps(token):
+    """
+    >>> _parse_laps(['foo']) # is None
+    >>> _parse_laps(['laps', '5'])
     ('laps', [], 5)
-    >>> _parseLaps(['laps', '1', '5'])
+    >>> _parse_laps(['laps', '1', '5'])
     ('laps', [1], 5)
-    >>> _parseLaps(['laps', '1', '2', '3', '5'])
+    >>> _parse_laps(['laps', '1', '2', '3', '5'])
     ('laps', [1, 2, 3], 5)
-    >>> _parseLaps(['laps'])
+    >>> _parse_laps(['laps'])
     ('error',)
-    >>> _parseLaps(['laps', 'foo', '5'])
+    >>> _parse_laps(['laps', 'foo', '5'])
     ('error',)
-    >>> _parseLaps(['laps', '0'])
+    >>> _parse_laps(['laps', '0'])
     ('error',)
-    >>> _parseLaps(['laps', '-2'])
+    >>> _parse_laps(['laps', '-2'])
     ('error',)
-    >>> _parseLaps(['laps', 'foo'])
+    >>> _parse_laps(['laps', 'foo'])
     ('error',)
-    '''
+    """
     if token[0] != 'laps':
         return None
     if len(token) == 1:
         return _error()
-    cids = _parseCategoryIds(token[1:-1])
+    cids = _parse_category_ids(token[1:-1])
     if _is_error(cids):
         return cids
     try:
@@ -244,49 +252,51 @@ def _parseLaps(token):
         return _error()
     if laps < 1:
         return _error()
-    return (LAPS, cids, laps)
+    return LAPS, cids, laps
 
-def _parseSplit(token):
-    '''
-    >>> _parseSplit(['1', '12:00:00'])
+
+def _parse_split(token):
+    """
+    >>> _parse_split(['1', '12:00:00'])
     ('split', [1], (12, 0, 0))
-    >>> _parseSplit(['1', '2', '3', '12:00:00'])
+    >>> _parse_split(['1', '2', '3', '12:00:00'])
     ('split', [1, 2, 3], (12, 0, 0))
-    >>> _parseSplit([])
+    >>> _parse_split([])
     ('error',)
-    >>> _parseSplit(['foo'])
+    >>> _parse_split(['foo'])
     ('error',)
-    >>> _parseSplit(['1', 'foo'])
+    >>> _parse_split(['1', 'foo'])
     ('error',)
-    >>> _parseSplit(['foo', '12:00:00'])
+    >>> _parse_split(['foo', '12:00:00'])
     ('error',)
-    '''
+    """
     if len(token) < 2:
         return _error()
-    bibs = _parseBibs(token[:-1])
+    bibs = _parse_bibs(token[:-1])
     if _is_error(bibs):
         return bibs
-    time = _parseTime(token[-1])
-    if _is_error(time):
-        return time
-    return (SPLIT, bibs, time)
+    split_time = _parse_time(token[-1])
+    if _is_error(split_time):
+        return split_time
+    return SPLIT, bibs, split_time
 
-def _parseReglist(token):
-    '''
-    >>> _parseReglist(['foo']) # is None
-    >>> _parseReglist(['reglist', './reglist.csv'])
+
+def _parse_reglist(token):
+    """
+    >>> _parse_reglist(['foo']) # is None
+    >>> _parse_reglist(['reglist', './reglist.csv'])
     ('reglist', './reglist.csv')
-    >>> _parseReglist(['reglist', './RegList.csv'])
+    >>> _parse_reglist(['reglist', './RegList.csv'])
     ('reglist', './RegList.csv')
-    >>> _parseReglist(['reglist', '\\'./reg list.csv\\''])
+    >>> _parse_reglist(['reglist', '\\'./reg list.csv\\''])
     ('reglist', './reg list.csv')
-    >>> _parseReglist(['reglist', '"./reg list.csv"'])
+    >>> _parse_reglist(['reglist', '"./reg list.csv"'])
     ('reglist', './reg list.csv')
-    >>> _parseReglist(['reglist'])
+    >>> _parse_reglist(['reglist'])
     ('error',)
-    >>> _parseReglist(['reglist', './reglist1.csv', './reglist2.csv'])
+    >>> _parse_reglist(['reglist', './reglist1.csv', './reglist2.csv'])
     ('error',)
-    '''
+    """
     if token[0] != 'reglist':
         return None
     if len(token) != 2:
@@ -294,23 +304,24 @@ def _parseReglist(token):
     path = token[1]
     path = path.strip('\'')
     path = path.strip('\"')
-    return (REGLIST, path)
+    return REGLIST, path
 
-def _parseCategoryIds(token):
-    '''
-    >>> _parseCategoryIds([])
+
+def _parse_category_ids(token):
+    """
+    >>> _parse_category_ids([])
     []
-    >>> _parseCategoryIds([1])
+    >>> _parse_category_ids([1])
     [1]
-    >>> _parseCategoryIds([1, 2, 3])
+    >>> _parse_category_ids([1, 2, 3])
     [1, 2, 3]
-    >>> _parseCategoryIds([1, 'foo', 3])
+    >>> _parse_category_ids([1, 'foo', 3])
     ('error',)
-    >>> _parseCategoryIds([1, 0, 3])
+    >>> _parse_category_ids([1, 0, 3])
     ('error',)
-    >>> _parseCategoryIds([1, -2, 3])
+    >>> _parse_category_ids([1, -2, 3])
     ('error',)
-    '''
+    """
     try:
         cids = list(map(int, token))
     except ValueError:
@@ -320,47 +331,48 @@ def _parseCategoryIds(token):
             return _error()
     return cids
 
-import time
-def _parseTime(token):
-    '''
-    >>> _parseTime('')
+
+def _parse_time(token):
+    """
+    >>> _parse_time('')
     ('error',)
-    >>> _parseTime('foo')
+    >>> _parse_time('foo')
     ('error',)
-    >>> _parseTime('24:00:00')
+    >>> _parse_time('24:00:00')
     ('error',)
-    >>> _parseTime('25:00:00')
+    >>> _parse_time('25:00:00')
     ('error',)
-    >>> _parseTime('00:00:00')
+    >>> _parse_time('00:00:00')
     (0, 0, 0)
-    >>> _parseTime('23:59:59')
+    >>> _parse_time('23:59:59')
     (23, 59, 59)
-    >>> _parseTime('13:14:15')
+    >>> _parse_time('13:14:15')
     (13, 14, 15)
-    '''
+    """
     try:
         tm = time.strptime(token, '%H:%M:%S')
     except ValueError:
         return _error()
-    return (tm.tm_hour, tm.tm_min, tm.tm_sec)
+    return tm.tm_hour, tm.tm_min, tm.tm_sec
 
-def _parseBibs(token):
-    '''
-    >>> _parseBibs([])
+
+def _parse_bibs(token):
+    """
+    >>> _parse_bibs([])
     []
-    >>> _parseBibs([0])
+    >>> _parse_bibs([0])
     [0]
-    >>> _parseBibs([1])
+    >>> _parse_bibs([1])
     [1]
-    >>> _parseBibs([11])
+    >>> _parse_bibs([11])
     [11]
-    >>> _parseBibs([1, 2, 3])
+    >>> _parse_bibs([1, 2, 3])
     [1, 2, 3]
-    >>> _parseBibs([1, 'foo', 3])
+    >>> _parse_bibs([1, 'foo', 3])
     ('error',)
-    >>> _parseBibs([1, -2, 3])
+    >>> _parse_bibs([1, -2, 3])
     ('error',)
-    '''
+    """
     try:
         bibs = list(map(int, token))
     except ValueError:
@@ -370,35 +382,38 @@ def _parseBibs(token):
             return _error()
     return bibs
 
-def _parseItt(token):
-    '''
-    >>> _parseItt(['itt'])
+
+def _parse_itt(token):
+    """
+    >>> _parse_itt(['itt'])
     ('itt',)
-    >>> _parseItt(['itt', 'foo'])
+    >>> _parse_itt(['itt', 'foo'])
     ('error',)
-    >>> _parseItt(['itta']) # is None
-    '''
+    >>> _parse_itt(['itta']) # is None
+    """
     if token[0] != 'itt':
         return None
 
     if len(token) != 1:
         return _error()
 
-    return (ITT,)
-    
+    return ITT,
+
+
 _parsers = [
-    _parseStart,
-    _parseFinish,
-    _parseLaps,
-    _parseReglist,
-    _parseItt,
-    _parseSplit,
+    _parse_start,
+    _parse_finish,
+    _parse_laps,
+    _parse_reglist,
+    _parse_itt,
+    _parse_split,
     lambda _: _error()
 ]
 
+
 def _error():
-    return (SYNTAX_ERROR,)
+    return SYNTAX_ERROR,
+
 
 def _is_error(exp):
     return isinstance(exp, tuple) and len(exp) > 0 and exp[0] == SYNTAX_ERROR
-

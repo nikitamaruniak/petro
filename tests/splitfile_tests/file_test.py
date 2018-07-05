@@ -3,7 +3,8 @@ import os
 
 from splitfile import SplitFile
 
-class SplitFile_acceptance_test_unix(unittest.TestCase):
+
+class SplitFileAcceptanceTestUnix(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):

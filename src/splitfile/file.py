@@ -1,13 +1,14 @@
 from .expressions import *
 from .parser import parse
 
+
 class SplitFile(object):
 
     @classmethod
     def open(cls, file_path):
         expressions = list(parse(_file_iter(file_path)))
         return cls(expressions)
-    
+
     def __init__(self, expressions):
         self._splits = []
         self._laps = {}
@@ -34,7 +35,7 @@ class SplitFile(object):
         self._errors.append(e)
 
     def _handle_itt(self, e):
-        if self._itt == True:
+        if self._itt:
             self._report_syntax_error(e)
         else:
             self._itt = True
@@ -115,6 +116,7 @@ class SplitFile(object):
     def finish(self):
         for c in self._finish.keys():
             yield (c, self._finish[c])
+
 
 def _file_iter(file_path):
     with open(file_path, mode='rtU', encoding='utf-8') as f:
