@@ -53,8 +53,8 @@ class Reglist:
         return Reglist(categories, participants)
 
 
-def _csv_lines(filepath):
-    with open(filepath, mode='rt', encoding='cp1251') as f:
+def _csv_lines(file_path):
+    with open(file_path, mode='rt', encoding='cp1251') as f:
         reader = csv.reader(
             f,
             delimiter=';',
