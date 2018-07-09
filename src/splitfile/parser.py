@@ -1,6 +1,6 @@
 import time
 
-from .expressions import *
+from . import expression
 
 
 def parse(lines):
@@ -31,7 +31,7 @@ def parse(lines):
         * Empty lines have no special meaning.
         * Trailing spaces and tabs are ignored.
         * Sequences of spaces or tabs have the same meaning as a one symbol.
-
+    # noqa 501
     >>> list(parse(['itt', '', 'foo', 'laps 5', 'start 1 12:13:14', '10 12:35:00']))
     [(1, 'itt'), (3, 'error'), (4, 'laps', [], 5), (5, 'start', [1], (12, 13, 14)), (6, 'split', [10], (12, 35, 0))]
     """
@@ -187,7 +187,7 @@ def _parse_start(token):
     start_time = _parse_time(token[-1])
     if _is_error(start_time):
         return start_time
-    return START, cids, start_time
+    return expression.START, cids, start_time
 
 
 def _parse_finish(token):
@@ -213,10 +213,10 @@ def _parse_finish(token):
     cids = _parse_category_ids(token[1:-1])
     if _is_error(cids):
         return cids
-    time = _parse_time(token[-1])
-    if _is_error(time):
-        return time
-    return FINISH, cids, time
+    finish_time = _parse_time(token[-1])
+    if _is_error(finish_time):
+        return finish_time
+    return expression.FINISH, cids, finish_time
 
 
 def _parse_laps(token):
@@ -252,7 +252,7 @@ def _parse_laps(token):
         return _error()
     if laps < 1:
         return _error()
-    return LAPS, cids, laps
+    return expression.LAPS, cids, laps
 
 
 def _parse_split(token):
@@ -278,7 +278,7 @@ def _parse_split(token):
     split_time = _parse_time(token[-1])
     if _is_error(split_time):
         return split_time
-    return SPLIT, bibs, split_time
+    return expression.SPLIT, bibs, split_time
 
 
 def _parse_reglist(token):
@@ -304,7 +304,7 @@ def _parse_reglist(token):
     path = token[1]
     path = path.strip('\'')
     path = path.strip('\"')
-    return REGLIST, path
+    return expression.REGLIST, path
 
 
 def _parse_category_ids(token):
@@ -397,7 +397,7 @@ def _parse_itt(token):
     if len(token) != 1:
         return _error()
 
-    return ITT,
+    return expression.ITT,
 
 
 _parsers = [
@@ -412,8 +412,11 @@ _parsers = [
 
 
 def _error():
-    return SYNTAX_ERROR,
+    return expression.SYNTAX_ERROR,
 
 
 def _is_error(exp):
-    return isinstance(exp, tuple) and len(exp) > 0 and exp[0] == SYNTAX_ERROR
+    return \
+        isinstance(exp, tuple) \
+        and len(exp) > 0 \
+        and exp[0] == expression.SYNTAX_ERROR

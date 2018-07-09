@@ -1,4 +1,4 @@
-from .expressions import *
+from . import expression
 from .parser import parse
 
 
@@ -18,13 +18,13 @@ class SplitFile(object):
         self._errors = []
         self._itt = False
         handlers = {
-            SYNTAX_ERROR: SplitFile._handle_syntax_error,
-            ITT: SplitFile._handle_itt,
-            REGLIST: SplitFile._handle_reglist,
-            SPLIT: SplitFile._handle_split,
-            LAPS: SplitFile._handle_laps,
-            START: SplitFile._handle_start,
-            FINISH: SplitFile._handle_finish
+            expression.SYNTAX_ERROR: SplitFile._handle_syntax_error,
+            expression.ITT: SplitFile._handle_itt,
+            expression.REGLIST: SplitFile._handle_reglist,
+            expression.SPLIT: SplitFile._handle_split,
+            expression.LAPS: SplitFile._handle_laps,
+            expression.START: SplitFile._handle_start,
+            expression.FINISH: SplitFile._handle_finish
         }
         for e in expressions:
             e_type = e[1]
@@ -84,7 +84,7 @@ class SplitFile(object):
 
     def _report_syntax_error(self, e):
         line_number = e[0]
-        self._errors.append((line_number, SYNTAX_ERROR))
+        self._errors.append((line_number, expression.SYNTAX_ERROR))
 
     @property
     def itt(self):
@@ -119,6 +119,6 @@ class SplitFile(object):
 
 
 def _file_iter(file_path):
-    with open(file_path, mode='rtU', encoding='utf-8') as f:
+    with open(file_path, mode='rt', encoding='utf-8') as f:
         for line in f:
             yield line
