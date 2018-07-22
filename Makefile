@@ -6,4 +6,4 @@ static_analysis:
 	flake8
 
 test: static_analysis
-	PYTHONPATH=$(PYTHONPATH) python -m unittest discover -p '*_test.py' -s tests
+	PYTHONPATH=$(PYTHONPATH) python3 -m unittest discover -p '*_test.py' -s tests
