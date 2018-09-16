@@ -8,15 +8,22 @@ from race.errors import (
     MalformedTimeStringError,
     SplitTimeIsEarlierThanStartTimeError,
     SplitsAreOutOfOrderError,
+    InvalidNumberOfLaps,
 )
 
 
 class RaceTests(unittest.TestCase):
+    def test_DoesNotAcceptZeroOrNegativeNumberOfLaps(self):
+        bad_laps_values = [-1, 0]
+        for laps in bad_laps_values:
+            with self.assertRaises(InvalidNumberOfLaps):
+                Race(laps=laps, bibs=[])
+
     def test_DoesNotAcceptSplitIfRaceHasNotStartedYet(self):
         some_participant = 7
         sut = Race(
             laps=5,
-            participants=[some_participant])
+            bibs=[some_participant])
         some_split_time = "12:15:00"
         with self.assertRaises(RaceHasNotStartedYetError):
             sut.split(some_participant, some_split_time)
@@ -25,7 +32,7 @@ class RaceTests(unittest.TestCase):
         some_participant = 7
         sut = Race(
             laps=5,
-            participants=[some_participant])
+            bibs=[some_participant])
         sut.start('12:00:00')
         not_a_participant = 13
         some_split_time = "12:15:00"
@@ -36,7 +43,7 @@ class RaceTests(unittest.TestCase):
         some_participant = 7
         sut = Race(
             laps=5,
-            participants=[some_participant])
+            bibs=[some_participant])
         sut.start('12:00:00')
         earlier_than_start = "11:00:00"
         with self.assertRaises(SplitTimeIsEarlierThanStartTimeError):
@@ -46,23 +53,23 @@ class RaceTests(unittest.TestCase):
         participant_count = 3
         sut = Race(
             laps=5,
-            participants=list(range(participant_count)))
+            bibs=list(range(participant_count)))
         sut.start('12:00:00')
 
-        self.assertEqual(participant_count, len(sut.results()))
+        self.assertEqual(participant_count, len(sut.results))
 
     def test_ResultsTableHandleOneLap(self):
         some_participant = 7
         sut = Race(
             laps=5,
-            participants=[some_participant])
+            bibs=[some_participant])
         sut.start('12:00:00')
 
         split_time = "12:15:00"
 
         sut.split(some_participant, split_time)
 
-        result = sut.results()[0]
+        result = sut.results[0]
 
         self.assertEqual(ParticipantState.RACING, result.state)
         self.assertEqual(some_participant, result.bib)
@@ -73,14 +80,14 @@ class RaceTests(unittest.TestCase):
         some_participant = 7
         sut = Race(
             laps=3,
-            participants=[some_participant])
+            bibs=[some_participant])
         sut.start('12:00:00')
 
         sut.split(some_participant, '12:10:10')
         sut.split(some_participant, '12:15:20')
         sut.split(some_participant, '12:20:00')
 
-        result = sut.results()[0]
+        result = sut.results[0]
 
         self.assertEqual(ParticipantState.FINISHED, result.state)
         self.assertEqual(3, result.laps_done)
@@ -91,7 +98,7 @@ class RaceTests(unittest.TestCase):
         some_participant = 7
         sut = Race(
             laps=3,
-            participants=[some_participant])
+            bibs=[some_participant])
         sut.start('12:00:00')
 
         sut.split(some_participant, '12:10:10')
@@ -106,7 +113,7 @@ class RaceTests(unittest.TestCase):
         some_participant = 7
         sut = Race(
             laps=3,
-            participants=[some_participant])
+            bibs=[some_participant])
         sut.start('12:00:00')
 
         not_a_participant = 13
@@ -117,7 +124,7 @@ class RaceTests(unittest.TestCase):
         some_participant = 7
         sut = Race(
             laps=3,
-            participants=[some_participant])
+            bibs=[some_participant])
         sut.start('12:00:00')
 
         sut.split(some_participant, '12:10:00')
@@ -132,7 +139,7 @@ class RaceTests(unittest.TestCase):
         some_participant = 7
         sut = Race(
             laps=3,
-            participants=[some_participant])
+            bibs=[some_participant])
         sut.start('12:00:00')
 
         sut.split(some_participant, '12:10:10')
@@ -146,7 +153,7 @@ class RaceTests(unittest.TestCase):
         some_participant = 7
         sut = Race(
             laps=3,
-            participants=[some_participant])
+            bibs=[some_participant])
         sut.start('12:00:00')
 
         sut.split(some_participant, '12:10:10')
@@ -154,7 +161,7 @@ class RaceTests(unittest.TestCase):
 
         sut.dnf(some_participant)
 
-        result = sut.results()[0]
+        result = sut.results[0]
 
         self.assertEqual(ParticipantState.DNF, result.state)
 
@@ -162,7 +169,7 @@ class RaceTests(unittest.TestCase):
         some_participant = 7
         sut = Race(
             laps=5,
-            participants=[some_participant])
+            bibs=[some_participant])
         with self.assertRaises(RaceHasNotStartedYetError):
             sut.dnf(some_participant)
 
@@ -170,7 +177,7 @@ class RaceTests(unittest.TestCase):
         some_participant = 7
         sut = Race(
             laps=5,
-            participants=[some_participant])
+            bibs=[some_participant])
         sut.start('12:00:00')
         malformed_time_strings = [
             '25:00:00', '12:61:00', '12:00:61',
@@ -185,8 +192,8 @@ class RaceTests(unittest.TestCase):
         some_participant = 7
         sut = Race(
             laps=5,
-            participants=[some_participant])
-        result = sut.results()[0]
+            bibs=[some_participant])
+        result = sut.results[0]
         self.assertEqual(ParticipantState.WARMING_UP, result.state)
 
     def test_TheOneWhoFinishesEarlierStandsHigher(self):
@@ -194,11 +201,11 @@ class RaceTests(unittest.TestCase):
         participant2 = 9
         sut = Race(
             laps=3,
-            participants=[participant1, participant2])
+            bibs=[participant1, participant2])
         sut.start('12:00:00')
         sut.split(participant1, '12:15:15')
         sut.split(participant2, '12:15:16')
-        standings = [result.bib for result in sut.results()]
+        standings = [result.bib for result in sut.results]
         self.assertSequenceEqual([participant1, participant2], standings)
 
     def test_TheOneWhoRidesMoreLapsStandsHigher_1(self):
@@ -206,10 +213,10 @@ class RaceTests(unittest.TestCase):
         participant2 = 9
         sut = Race(
             laps=3,
-            participants=[participant1, participant2])
+            bibs=[participant1, participant2])
         sut.start('12:00:00')
         sut.split(participant1, '12:15:15')
-        standings = [result.bib for result in sut.results()]
+        standings = [result.bib for result in sut.results]
         self.assertSequenceEqual([participant1, participant2], standings)
 
     def test_TheOneWhoRidesMoreLapsStandsHigher_2(self):
@@ -217,12 +224,12 @@ class RaceTests(unittest.TestCase):
         participant2 = 9
         sut = Race(
             laps=3,
-            participants=[participant1, participant2])
+            bibs=[participant1, participant2])
         sut.start('12:00:00')
         sut.split(participant2, '12:14:00')
         sut.split(participant1, '12:15:00')
         sut.split(participant1, '12:20:00')
-        standings = [result.bib for result in sut.results()]
+        standings = [result.bib for result in sut.results]
         self.assertSequenceEqual([participant1, participant2], standings)
 
     def test_TheOneWhoDNFsStandsLower(self):
@@ -230,13 +237,13 @@ class RaceTests(unittest.TestCase):
         participant2 = 9
         sut = Race(
             laps=3,
-            participants=[participant1, participant2])
+            bibs=[participant1, participant2])
         sut.start('12:00:00')
         sut.split(participant2, '12:10:00')
         sut.split(participant1, '12:12:00')
         sut.split(participant2, '12:15:00')
         sut.dnf(participant2)
-        standings = [result.bib for result in sut.results()]
+        standings = [result.bib for result in sut.results]
         self.assertSequenceEqual([participant1, participant2], standings)
 
     def test_LappedRiderRidesLess(self):
@@ -244,14 +251,14 @@ class RaceTests(unittest.TestCase):
         lapped = 9
         sut = Race(
             laps=3,
-            participants=[leader, lapped])
+            bibs=[leader, lapped])
         sut.start('12:00:00')
         sut.split(leader, '12:05:00')
         sut.split(leader, '12:10:00')
         sut.split(lapped, '12:10:00')
         sut.split(leader, '12:15:00')
         sut.split(lapped, '12:20:00')
-        lapped_state = sut.results()[1].state
+        lapped_state = sut.results[1].state
         self.assertEqual(ParticipantState.FINISHED, lapped_state)
 
     def test_OrderOfSplitsMatters(self):
@@ -259,7 +266,7 @@ class RaceTests(unittest.TestCase):
         other_participant = 9
         sut = Race(
             laps=3,
-            participants=[some_participant, other_participant])
+            bibs=[some_participant, other_participant])
         sut.start('12:00:00')
 
         shuffled_splits = ['12:15:20', '12:10:10']

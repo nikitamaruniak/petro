@@ -4,6 +4,7 @@ from .errors import (
     BibHasAlreadyFinishedError,
     SplitTimeIsEarlierThanStartTimeError,
     SplitsAreOutOfOrderError,
+    InvalidNumberOfLaps,
 )
 from .participant import Participant
 from .participant_state import ParticipantState
@@ -15,11 +16,9 @@ from .time_str import (
 
 
 class Race(object):
-    def __init__(self, laps, participants):
+    def __init__(self, laps, bibs):
         if laps <= 0:
-            raise ValueError(
-                'Zero or a negative number ' +
-                'is the wrong value for the number of laps.')
+            raise InvalidNumberOfLaps()
 
         self._laps = laps
         self._start_time_dt = None
@@ -28,7 +27,7 @@ class Race(object):
         self._last_split_time_dt = None
 
         self._participants = {}
-        for bib in set(participants):
+        for bib in set(bibs):
             self._participants[bib] = Participant(
                 bib=bib,
                 splits=[],
@@ -97,6 +96,7 @@ class Race(object):
         self._ensure_racing(participant)
         participant.state = ParticipantState.DNF
 
+    @property
     def results(self):
         participants = list(self._participants.values())
         participants.sort(key=self._race_rules)

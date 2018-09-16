@@ -20,3 +20,7 @@ class SplitTimeIsEarlierThanStartTimeError(ValueError):
 
 class SplitsAreOutOfOrderError(ValueError):
     pass
+
+
+class InvalidNumberOfLaps(ValueError):
+    pass
