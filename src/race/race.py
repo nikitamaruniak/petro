@@ -1,9 +1,9 @@
 from .errors import (
-    RaceHasNotStartedYetError,
-    BibIsNotRegisteredError,
-    BibHasAlreadyFinishedError,
-    SplitTimeIsEarlierThanStartTimeError,
-    SplitsAreOutOfOrderError,
+    RaceHasNotStartedYet,
+    BibIsNotRegistered,
+    BibHasAlreadyFinished,
+    SplitTimeIsEarlierThanStartTime,
+    SplitsAreOutOfOrder,
     InvalidNumberOfLaps,
 )
 from .participant import Participant
@@ -50,7 +50,7 @@ class Race(object):
         split_time_dt = time_str_to_datetime(split_time_str)
 
         if split_time_dt < self._start_time_dt:
-            raise SplitTimeIsEarlierThanStartTimeError()
+            raise SplitTimeIsEarlierThanStartTime()
 
         self._ensure_in_order(split_time_dt)
         self._last_split_time_dt = split_time_dt
@@ -75,19 +75,19 @@ class Race(object):
 
     def _ensure_started(self):
         if not self._start_time_dt:
-            raise RaceHasNotStartedYetError()
+            raise RaceHasNotStartedYet()
 
     def _ensure_registered(self, bib):
         if bib not in self._participants:
-            raise BibIsNotRegisteredError()
+            raise BibIsNotRegistered()
 
     def _ensure_racing(self, participant):
         if participant.state != ParticipantState.RACING:
-            raise BibHasAlreadyFinishedError()
+            raise BibHasAlreadyFinished()
 
     def _ensure_in_order(self, split_time_dt):
         if split_time_dt < self._last_split_time_dt:
-            raise SplitsAreOutOfOrderError()
+            raise SplitsAreOutOfOrder()
 
     def dnf(self, bib):
         self._ensure_started()

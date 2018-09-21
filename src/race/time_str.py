@@ -1,13 +1,13 @@
 from datetime import datetime
 
-from .errors import MalformedTimeStringError
+from .errors import MalformedTimeString
 
 
 def time_str_to_datetime(time_str):
     try:
         return datetime.strptime(time_str, '%H:%M:%S')
     except ValueError:
-        raise MalformedTimeStringError()
+        raise MalformedTimeString()
 
 
 def timedelta_to_time_str(td):

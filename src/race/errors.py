@@ -1,24 +1,24 @@
-class RaceHasNotStartedYetError(ValueError):
+class RaceHasNotStartedYet(ValueError):
     pass
 
 
-class BibIsNotRegisteredError(ValueError):
+class BibIsNotRegistered(ValueError):
     pass
 
 
-class BibHasAlreadyFinishedError(ValueError):
+class BibHasAlreadyFinished(ValueError):
     pass
 
 
-class MalformedTimeStringError(ValueError):
+class MalformedTimeString(ValueError):
     pass
 
 
-class SplitTimeIsEarlierThanStartTimeError(ValueError):
+class SplitTimeIsEarlierThanStartTime(ValueError):
     pass
 
 
-class SplitsAreOutOfOrderError(ValueError):
+class SplitsAreOutOfOrder(ValueError):
     pass
 
 

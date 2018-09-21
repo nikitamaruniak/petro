@@ -2,12 +2,12 @@ import unittest
 
 from race import Race, ParticipantState
 from race.errors import (
-    RaceHasNotStartedYetError,
-    BibIsNotRegisteredError,
-    BibHasAlreadyFinishedError,
-    MalformedTimeStringError,
-    SplitTimeIsEarlierThanStartTimeError,
-    SplitsAreOutOfOrderError,
+    RaceHasNotStartedYet,
+    BibIsNotRegistered,
+    BibHasAlreadyFinished,
+    MalformedTimeString,
+    SplitTimeIsEarlierThanStartTime,
+    SplitsAreOutOfOrder,
     InvalidNumberOfLaps,
 )
 
@@ -25,7 +25,7 @@ class RaceTests(unittest.TestCase):
             laps=5,
             bibs=[some_participant])
         some_split_time = "12:15:00"
-        with self.assertRaises(RaceHasNotStartedYetError):
+        with self.assertRaises(RaceHasNotStartedYet):
             sut.split(some_participant, some_split_time)
 
     def test_DoesNotAcceptSplitIfBibIsNotRegistered(self):
@@ -36,7 +36,7 @@ class RaceTests(unittest.TestCase):
         sut.start('12:00:00')
         not_a_participant = 13
         some_split_time = "12:15:00"
-        with self.assertRaises(BibIsNotRegisteredError):
+        with self.assertRaises(BibIsNotRegistered):
             sut.split(not_a_participant, some_split_time)
 
     def test_DoesNotAcceptSplitIfItIsEarlierThanStartTime(self):
@@ -46,7 +46,7 @@ class RaceTests(unittest.TestCase):
             bibs=[some_participant])
         sut.start('12:00:00')
         earlier_than_start = "11:00:00"
-        with self.assertRaises(SplitTimeIsEarlierThanStartTimeError):
+        with self.assertRaises(SplitTimeIsEarlierThanStartTime):
             sut.split(some_participant, earlier_than_start)
 
     def test_ResultsTableContainsAllRegisteredParticipants(self):
@@ -105,7 +105,7 @@ class RaceTests(unittest.TestCase):
         sut.split(some_participant, '12:15:20')
         sut.split(some_participant, '12:20:00')
 
-        with self.assertRaises(BibHasAlreadyFinishedError):
+        with self.assertRaises(BibHasAlreadyFinished):
             excessive_split = '12:25:00'
             sut.split(some_participant, excessive_split)
 
@@ -117,7 +117,7 @@ class RaceTests(unittest.TestCase):
         sut.start('12:00:00')
 
         not_a_participant = 13
-        with self.assertRaises(BibIsNotRegisteredError):
+        with self.assertRaises(BibIsNotRegistered):
             sut.dnf(not_a_participant)
 
     def test_DoesNotAcceptSplitIfBibHasAlreadyDnf(self):
@@ -132,7 +132,7 @@ class RaceTests(unittest.TestCase):
 
         sut.dnf(some_participant)
 
-        with self.assertRaises(BibHasAlreadyFinishedError):
+        with self.assertRaises(BibHasAlreadyFinished):
             sut.split(some_participant, '12:20:00')
 
     def test_DoesNotAcceptDnfIfBibHasAlreadyFinished(self):
@@ -146,7 +146,7 @@ class RaceTests(unittest.TestCase):
         sut.split(some_participant, '12:15:20')
         sut.split(some_participant, '12:20:00')
 
-        with self.assertRaises(BibHasAlreadyFinishedError):
+        with self.assertRaises(BibHasAlreadyFinished):
             sut.dnf(some_participant)
 
     def test_DnfRidesHasDnfInResultsTable(self):
@@ -170,7 +170,7 @@ class RaceTests(unittest.TestCase):
         sut = Race(
             laps=5,
             bibs=[some_participant])
-        with self.assertRaises(RaceHasNotStartedYetError):
+        with self.assertRaises(RaceHasNotStartedYet):
             sut.dnf(some_participant)
 
     def test_DoesNotAcceptMalformedTimeStrings(self):
@@ -185,7 +185,7 @@ class RaceTests(unittest.TestCase):
             'ab:bc:de', '12:00:00,', '12 :00: 00'
         ]
         for malformed_time_string in malformed_time_strings:
-            with self.assertRaises(MalformedTimeStringError):
+            with self.assertRaises(MalformedTimeString):
                 sut.split(some_participant, malformed_time_string)
 
     def test_WhileTheRaceIsNotStartedEverybodyWarmsUp(self):
@@ -271,5 +271,5 @@ class RaceTests(unittest.TestCase):
 
         shuffled_splits = ['12:15:20', '12:10:10']
         sut.split(some_participant, shuffled_splits[0])
-        with self.assertRaises(SplitsAreOutOfOrderError):
+        with self.assertRaises(SplitsAreOutOfOrder):
             sut.split(other_participant, shuffled_splits[1])
