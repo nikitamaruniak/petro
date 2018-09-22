@@ -41,6 +41,8 @@ class Reglist:
         categories = []
         category_id = None
         for row in _csv_lines(file_path):
+            if not row:
+                continue
             if row[0] != '' and row[1] == '':
                 category_name = row[0]
                 category_id = category_id + 1 if category_id else 1
@@ -49,7 +51,7 @@ class Reglist:
                 # Номер;Имя;Ник;Команда;Откуда;Возраст;*
                 bib, name, nickname, team, city, age, *_ = row
                 p = Participant(
-                    bib=bib if len(bib) else None,
+                    bib=int(bib) if len(bib) else None,
                     category_id=category_id,
                     name=name,
                     nickname=nickname,

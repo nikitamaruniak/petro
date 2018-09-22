@@ -22,7 +22,7 @@ class ReglistTests(unittest.TestCase):
     def test_participants_by_category(self):
         ps = list(self._reglist.participants(1))
         self.assertEqual(7, len(ps))
-        p = [x for x in ps if x.bib == '13']
+        p = [x for x in ps if x.bib == 13]
         self.assertEqual(1, len(p))
         self.assertEqual('Просто Илья', p[0].name)
         ps = self._reglist.participants(2)
@@ -39,8 +39,8 @@ class ReglistTests(unittest.TestCase):
         self.assertEqual(None, ps)
 
     def test_participant_by_bib(self):
-        p = self._reglist.participant('59')
-        self.assertEqual('59', p.bib)
+        p = self._reglist.participant(59)
+        self.assertEqual(59, p.bib)
         self.assertEqual('Чудо Яна', p.name)
 
     def test_not_existing_bib(self):

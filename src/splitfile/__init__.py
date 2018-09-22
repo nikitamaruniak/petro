@@ -1,5 +1,5 @@
-from .file import open
+from .file import open_split
 from . import expression
 
 
-__all__ = ['open', 'expression']
+__all__ = ['open_split', 'expression']

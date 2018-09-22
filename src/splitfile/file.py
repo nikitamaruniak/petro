@@ -1,7 +1,7 @@
 from .parser import parse
 
 
-def open(file_path, encoding='utf-8'):
+def open_split(file_path, encoding='utf-8'):
     return parse(_file_iter(file_path, encoding))
 
 
