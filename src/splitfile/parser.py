@@ -14,6 +14,7 @@ def parse(lines):
         finish [<cid> ... <cid>] <time>
         laps [<cid> ... <cid>] <laps>
         reglist <path>
+        dnf <bib> <time>
         itt
 
         bib - bib number - positive number starting from zero.
@@ -32,8 +33,8 @@ def parse(lines):
         * Trailing spaces and tabs are ignored.
         * Sequences of spaces or tabs have the same meaning as a one symbol.
     # noqa 501
-    >>> list(parse(['itt', '', 'foo', 'laps 5', 'start 1 12:13:14', '10 12:35:00']))
-    [(1, 'itt'), (3, 'error'), (4, 'laps', [], 5), (5, 'start', [1], (12, 13, 14)), (6, 'split', [10], (12, 35, 0))]
+    >>> list(parse(['itt', '', 'foo', 'laps 5', 'start 1 12:13:14', '10 12:35:00', 'dnf 7 12:36:00']))
+    [(1, 'itt'), (3, 'error'), (4, 'laps', [], 5), (5, 'start', [1], (12, 13, 14)), (6, 'split', [10], (12, 35, 0)), (7, 'dnf', [7], (12, 36, 0))]
     """
     line_number = 1
     for line in lines:
@@ -400,12 +401,38 @@ def _parse_itt(token):
     return expression.ITT,
 
 
+def _parse_dnf(token):
+    """
+    >>> _parse_dnf(['dnf', '1', '12:00:00'])
+    ('dnf', [1], (12, 0, 0))
+    >>> _parse_dnf(['dnf', '1', '2', '12:00:00'])
+    ('dnf', [1, 2], (12, 0, 0))
+    >>> _parse_dnf(['foo', 1, '12:00:00']) # is None
+    >>> _parse_dnf(['dnf'])
+    ('error',)
+    >>> _parse_dnf(['dnf', 'foo', '12:00:00'])
+    ('error',)
+    >>> _parse_dnf(['dnf', 1, 'foo'])
+    ('error',)
+    """
+    if token[0] != 'dnf':
+        return None
+    bibs = _parse_bibs(token[1:-1])
+    if _is_error(bibs):
+        return bibs
+    split_time = _parse_time(token[-1])
+    if _is_error(split_time):
+        return split_time
+    return expression.DNF, bibs, split_time
+
+
 _parsers = [
     _parse_start,
     _parse_finish,
     _parse_laps,
     _parse_reglist,
     _parse_itt,
+    _parse_dnf,
     _parse_split,
     lambda _: _error()
 ]
