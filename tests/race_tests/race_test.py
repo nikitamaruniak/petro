@@ -75,6 +75,7 @@ class RaceTests(unittest.TestCase):
         self.assertEqual(some_participant, result.bib)
         self.assertEqual(1, result.laps_done)
         self.assertEqual(['00:15:00'], result.lap_times)
+        self.assertEqual('00:15:00', result.total_time)
 
     def test_ResultsTableHandleMultipleLaps(self):
         some_participant = 7
@@ -93,6 +94,7 @@ class RaceTests(unittest.TestCase):
         self.assertEqual(3, result.laps_done)
         self.assertSequenceEqual(
             ['00:10:10', '00:05:10', '00:04:40'], result.lap_times)
+        self.assertEqual('00:20:00', result.total_time)
 
     def test_DoesNotAcceptSplitIfBibHasAlreadyFinished(self):
         some_participant = 7

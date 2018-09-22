@@ -139,11 +139,16 @@ class Race(object):
         splits = participant.splits
         laps_done = len(splits)
         lap_times = list(map(timedelta_to_time_str, self._lap_times(splits)))
+        if len(splits):
+            total_time = timedelta_to_time_str(splits[-1] - self._start_time_dt)
+        else:
+            total_time = '00:00:00'
         return ResultRow(
             state=participant.state,
             bib=participant.bib,
             laps_done=laps_done,
             lap_times=lap_times,
+            total_time=total_time
         )
 
     def _lap_times(self, splits):
