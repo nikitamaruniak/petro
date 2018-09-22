@@ -25,12 +25,14 @@ class ReglistTests(unittest.TestCase):
         p = [x for x in ps if x.bib == '13']
         self.assertEqual(1, len(p))
         self.assertEqual('Просто Илья', p[0].name)
-        self.assertEqual(1, p[0].category_id)
         ps = self._reglist.participants(2)
         p = [x for x in ps if x.name == 'Супер Яна']
         self.assertEqual(1, len(p))
         self.assertEqual(None, p[0].bib)
-        self.assertEqual(2, p[0].category_id)
+        self.assertEqual('Одноока', p[0].nickname)
+        self.assertEqual('Critical', p[0].team)
+        self.assertEqual('Mariupol', p[0].city)
+        self.assertEqual('29', p[0].age)
 
     def test_not_existing_category(self):
         ps = self._reglist.participants(3)
@@ -40,7 +42,6 @@ class ReglistTests(unittest.TestCase):
         p = self._reglist.participant('59')
         self.assertEqual('59', p.bib)
         self.assertEqual('Чудо Яна', p.name)
-        self.assertEqual(2, p.category_id)
 
     def test_not_existing_bib(self):
         p = self._reglist.participant('100')

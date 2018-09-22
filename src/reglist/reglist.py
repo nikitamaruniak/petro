@@ -46,9 +46,16 @@ class Reglist:
                 category_id = category_id + 1 if category_id else 1
                 categories.append((category_id, category_name))
             elif category_id is not None:
-                bib = row[0]
-                name = row[1]
-                p = Participant(bib, name, category_id)
+                # Номер;Имя;Ник;Команда;Откуда;Возраст;*
+                bib, name, nickname, team, city, age, *_ = row
+                p = Participant(
+                    bib=bib if len(bib) else None,
+                    category_id=category_id,
+                    name=name,
+                    nickname=nickname,
+                    team=team,
+                    city=city,
+                    age=age)
                 participants.append(p)
         return Reglist(categories, participants)
 
