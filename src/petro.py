@@ -80,7 +80,7 @@ if __name__ == '__main__':
                         elif reglist.participants(id) is None:
                             _error(line_number, 'Category not found.')
                         else:
-                            bibs = [p.bib for p in reglist.participants(id)]
+                            bibs = [p.bib for p in reglist.participants(id) if p.bib is not None]
                             races[id] = Race(laps=laps, bibs=bibs)
             elif etype == splitfile.expression.START:
                 if reglist is None:
