@@ -273,3 +273,23 @@ class RaceTests(unittest.TestCase):
         sut.split(some_participant, shuffled_splits[0])
         with self.assertRaises(SplitsAreOutOfOrder):
             sut.split(other_participant, shuffled_splits[1])
+
+    def test_ShowsNumberOfLaps(self):
+        sut = Race(laps=5, bibs=[])
+        self.assertEqual(5, sut.laps)
+
+    def test_ShowsStartedFlag(self):
+        sut = Race(laps=5, bibs=[])
+        self.assertEqual(False, sut.started)
+        sut.start('12:15:04')
+        self.assertEqual(True, sut.started)
+
+    def test_DoesNotShowStartTimeIfNotStarted(self):
+        sut = Race(laps=5, bibs=[])
+        with self.assertRaises(RaceHasNotStartedYet):
+            sut.start_time
+
+    def test_ShowsStartTime(self):
+        sut = Race(laps=5, bibs=[])
+        sut.start('12:05:15')
+        self.assertEqual('12:05:15', sut.start_time)

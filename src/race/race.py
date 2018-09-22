@@ -22,6 +22,7 @@ class Race(object):
 
         self._laps = laps
         self._start_time_dt = None
+        self._start_time_str = None
         self._leader_finished = False
         self._leader_finish_time_dt = None
         self._last_split_time_dt = None
@@ -37,11 +38,25 @@ class Race(object):
         self._participants
         self._splits = []
 
+    @property
+    def laps(self):
+        return self._laps
+
     def start(self, start_time_str):
         self._start_time_dt = time_str_to_datetime(start_time_str)
+        self._start_time_str = start_time_str
         self._last_split_time_dt = self._start_time_dt
         for participant in self._participants.values():
             participant.state = ParticipantState.RACING
+
+    @property
+    def start_time(self):
+        self._ensure_started()
+        return self._start_time_str
+
+    @property
+    def started(self):
+        return self._start_time_dt is not None
 
     def split(self, bib, split_time_str):
         self._ensure_started()
