@@ -13,9 +13,11 @@ test_csv_output()
 test_html_output()
 {
     ignore='Час створення протоколу'
+    empty_line='^ *$'
     python -m petro test.split html tmp.html && \
-        grep -v "$ignore" tmp.html > actual.html && \
-        grep -v "$ignore" expected.html | diff actual.html -
+        grep -v "$ignore" tmp.html | grep -v "$empty_line" > actual.html && \
+        grep -v "$ignore" expected.html | grep -v "$empty_line" | \
+        diff -w actual.html -
     exit_code=$?
     if [ $exit_code -eq 0 ]
     then

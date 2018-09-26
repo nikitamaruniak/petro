@@ -5,6 +5,8 @@ import os
 import csv
 import datetime
 
+from jinja2 import Environment, FileSystemLoader
+
 from race import Race, ParticipantState
 from reglist import Reglist
 import splitfile
@@ -189,88 +191,41 @@ if __name__ == '__main__':
 
                     writer.writerow(row)
     else:
-        html = []
-        html.append('<!DOCTYPE html>')
-        html.append('<html lang="uk-UA">')
-        html.append('<head>')
-        html.append('   <meta charset="UTF-8">')
-        html.append('   <title>Результати</title>')
-        html.append('''   <style>'
-        tbody tr:nth-child(odd) {
-            background-color: #ffffff;
-        }
-    
-        tbody tr:nth-child(even) {
-            background-color: #e8edff;
+        context = {
+            'current_time': datetime.datetime.now().strftime('%H:%M:%S'),
+            'races': [],
         }
 
-        table {
-            border-collapse: collapse;
-            font-family: Sans-Serif;
-            font-size: 12px;
-        }
-
-        td, th {
-            border-bottom: 1px solid #ddd;
-            padding: 0.3rem;
-            text-align: left;
-        }
-        </style>''')
-        html.append('</head>')
-        html.append('<body>')
-        current_time_str = datetime.datetime.now().strftime('%H:%M:%S')
-        html.append('   <img src=\'banner.png\'/>')
-        html.append('   <p>Час створення протоколу: {}</p>'.format(current_time_str))
         for category_id, category_name in reglist.categories:
             if category_id not in races:
                 continue
             race = races[category_id]
             laps = race.laps
-            html.append('   <h1>{}</h1>'.format(category_name))
-            start_time_str = race.start_time if race.started else 'очікується'
-            html.append('   <p>Час старту категорії: {}</p>'.format(start_time_str))
-
-            html.append('   <table>')
-
-            html.append('   <tr>')
-            html.append('       <th>{}</th>'.format('Статус'))
-            html.append('       <th>{}</th>'.format('Поз.'))
-            html.append('       <th>{}</th>'.format('Номер'))
-            html.append('       <th>{}</th>'.format('ПІБ'))
-            html.append('       <th>{}</th>'.format('Команда'))
-            html.append('       <th>{}</th>'.format('Місто'))
-            html.append('       <th>{}</th>'.format('Вік'))
-            html.append('       <th>{}</th>'.format('К. кіл'))
-            html.append('       <th>{}</th>'.format('Заг. час'))
-            for i in range(1, laps + 1):
-                html.append('       <th>{}{}</th>'.format('Коло ', i))
-            html.append('   </tr>')
+            r = {
+                'category_name': category_name,
+                'laps': race.laps,
+                'start_time': race.start_time if race.started else 'очікується',
+                'results': [],
+            }
 
             position = 1
             for result in race.results:
                 participant = reglist.participant(result.bib)
-                state_str = _state_ua_str(result.state)
-                html.append('   <tr>')
-                html.append('       <td>{}</td>'.format(state_str))
-                html.append('       <td>{}</td>'.format(str(position)))
-                html.append('       <td>{}</td>'.format(participant.bib))
-                html.append('       <td>{}</td>'.format(participant.name))
-                html.append('       <td>{}</td>'.format(participant.team))
-                html.append('       <td>{}</td>'.format(participant.city))
-                html.append('       <td>{}</td>'.format(participant.age))
-                html.append('       <td>{}</td>'.format(result.laps_done))
-                html.append('       <td>{}</td>'.format(result.total_time))
-                for lap_time in result.lap_times:
-                    html.append('       <td>{}</td>'.format(lap_time))
-                for _ in range(laps - result.laps_done):
-                    html.append('       <td></td>')
-                html.append('   </tr>')
+                r['results'].append({
+                    'state': _state_ua_str(result.state),
+                    'position': position,
+                    'bib': participant.bib,
+                    'name': participant.name,
+                    'team': participant.team,
+                    'city': participant.city,
+                    'age': participant.age,
+                    'laps_done': result.laps_done,
+                    'total_time': result.total_time,
+                    'lap_times': result.lap_times
+                })
                 position += 1
-            html.append('   </table>')
-        html.append('</body>')
-        html.append('</html>')
+            context['races'].append(r)
 
-        with open(output_path, mode='w', encoding='utf-8') as f:
-            for line_number in html:
-                f.write(line_number)
-                f.write('\n')
+        env = Environment(loader=FileSystemLoader(os.path.dirname(__file__)))
+        tpl = env.get_template('petro.html')
+        tpl.stream(context).dump(output_path, encoding='utf-8')

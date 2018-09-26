@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="uk-UA">
+<head>
+    <meta charset="UTF-8">
+    <title>Результати</title>
+    <style>
+        tbody tr:nth-child(odd) {
+            background-color: #ffffff;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #e8edff;
+        }
+
+        table {
+            border-collapse: collapse;
+            font-family: Sans-Serif;
+            font-size: 12px;
+        }
+
+        td, th {
+            border-bottom: 1px solid #ddd;
+            padding: 0.3rem;
+            text-align: left;
+        }
+        </style>
+</head>
+<body>
+    <img src='banner.png'/>
+    <p>Час створення протоколу: {{ current_time }}</p>
+    {% for race in races %}
+        <h1>{{ race.category_name }}</h1>
+        <p>Час старту категорії: {{ race.start_time }}</p>
+        <table>
+        <tr>
+            <th>Статус</th>
+            <th>Поз.</th>
+            <th>Номер</th>
+            <th>ПІБ</th>
+            <th>Команда</th>
+            <th>Місто</th>
+            <th>Вік</th>
+            <th>К. кіл</th>
+            <th>Заг. час</th>
+            {% for i in range(1, race.laps + 1) %}
+                <th>Коло {{ i }}</th>
+            {% endfor %}
+        </tr>
+        {% for result in race.results %}
+            <tr>
+                <td>{{ result.state }}</td>
+                <td>{{ result.position }}</td>
+                <td>{{ result.bib }}</td>
+                <td>{{ result.name }}</td>
+                <td>{{ result.team }}</td>
+                <td>{{ result.city }}</td>
+                <td>{{ result.age }}</td>
+                <td>{{ result.laps_done }}</td>
+                <td>{{ result.total_time }}</td>
+                {% for lap_time in result.lap_times %}
+                    <td>{{ lap_time }}</td>
+                {% endfor %}
+                {% for _ in range(race.laps - result.laps_done) %}
+                    <td></td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+        </table>
+    {% endfor %}
+</body>
+</html>
