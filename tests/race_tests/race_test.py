@@ -248,6 +248,20 @@ class RaceTests(unittest.TestCase):
         standings = [result.bib for result in sut.results]
         self.assertSequenceEqual([participant1, participant2], standings)
 
+    def test_ReturnsRidersPosition(self):
+        participant1 = 7
+        participant2 = 9
+        sut = Race(
+            laps=3,
+            bibs=[participant1, participant2])
+        sut.start('12:00:00')
+        sut.split(participant2, '12:14:00')
+        sut.split(participant1, '12:15:00')
+        standings = [(result.position, result.bib) for result in sut.results]
+        self.assertSequenceEqual(
+            [(1, participant2), (2, participant1)],
+            standings)
+
     def test_LappedRiderRidesLess(self):
         leader = 7
         lapped = 9

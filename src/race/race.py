@@ -115,7 +115,9 @@ class Race(object):
     def results(self):
         participants = list(self._participants.values())
         participants.sort(key=self._race_rules)
-        return list(map(self._result_item, participants))
+        return [
+            self._result_item(position + 1, participant)
+            for position, participant in enumerate(participants)]
 
     def _race_rules(self, participant):
         priority = self._priority_by_state[participant.state]
@@ -135,7 +137,7 @@ class Race(object):
         ParticipantState.DNF: 4
     }
 
-    def _result_item(self, participant):
+    def _result_item(self, position, participant):
         splits = participant.splits
         laps_done = len(splits)
         lap_times = list(map(timedelta_to_time_str, self._lap_times(splits)))
@@ -145,6 +147,7 @@ class Race(object):
         else:
             total_time = '00:00:00'
         return ResultRow(
+            position=position,
             state=participant.state,
             bib=participant.bib,
             laps_done=laps_done,

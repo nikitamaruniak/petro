@@ -165,11 +165,10 @@ if __name__ == '__main__':
             for category_id, category_name in reglist.categories:
                 if category_id not in races:
                     continue
-                position = 1
                 for result in races[category_id].results:
                     participant = reglist.participant(result.bib)
                     row = [
-                        position if result.state != ParticipantState.DNF else 'Сход',
+                        result.position if result.state != ParticipantState.DNF else 'Сход',
                         participant.bib,
                         category_name,
                         '',
@@ -187,7 +186,6 @@ if __name__ == '__main__':
                     ]
                     row += result.lap_times
                     row += [''] * (laps - result.laps_done)
-                    position += 1
 
                     writer.writerow(row)
     else:
@@ -208,12 +206,11 @@ if __name__ == '__main__':
                 'results': [],
             }
 
-            position = 1
             for result in race.results:
                 participant = reglist.participant(result.bib)
                 r['results'].append({
                     'state': _state_ua_str(result.state),
-                    'position': position,
+                    'position': result.position,
                     'bib': participant.bib,
                     'name': participant.name,
                     'team': participant.team,
@@ -223,7 +220,6 @@ if __name__ == '__main__':
                     'total_time': result.total_time,
                     'lap_times': result.lap_times
                 })
-                position += 1
             context['races'].append(r)
 
         env = Environment(loader=FileSystemLoader(os.path.dirname(__file__)))
