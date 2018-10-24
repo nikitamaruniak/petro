@@ -31,6 +31,7 @@
     {% for race in races %}
         <h1>{{ race.category_name }}</h1>
         <p>Час старту категорії: {{ race.start_time }}</p>
+        <p>На колі: {{ race.riders_on_course }}</p>
         <table>
         <tr>
             <th>Статус</th>

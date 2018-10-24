@@ -309,3 +309,17 @@ class RaceTests(unittest.TestCase):
         sut = Race(laps=5, bibs=[])
         sut.start('12:05:15')
         self.assertEqual('12:05:15', sut.start_time)
+
+    def test_ReturnsNumberOfRidersOnTheCourse(self):
+        sut = Race(laps=1, bibs=[1, 2, 3])
+        self.assertEqual(0, sut.results.riders_on_course)
+
+        sut.start('12:00:00')
+        self.assertEqual(3, sut.results.riders_on_course)
+
+        sut.split(1, '12:01:00')
+        sut.split(2, '12:01:03')
+        self.assertEqual(1, sut.results.riders_on_course)
+
+        sut.dnf(3)
+        self.assertEqual(0, sut.results.riders_on_course)
