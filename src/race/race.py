@@ -9,7 +9,6 @@ from .errors import (
 from .participant import Participant
 from .participant_state import ParticipantState
 from .result_row import ResultRow
-from .result import Result
 from .time_str import (
     time_str_to_datetime,
     timedelta_to_time_str
@@ -116,10 +115,9 @@ class Race(object):
     def results(self):
         participants = list(self._participants.values())
         participants.sort(key=self._race_rules)
-        rows = [
+        return [
             self._result_item(position + 1, participant)
             for position, participant in enumerate(participants)]
-        return Result(rows)
 
     def _race_rules(self, participant):
         priority = self._priority_by_state[participant.state]
@@ -164,3 +162,10 @@ class Race(object):
             laps.append(split_dt - prev_time_dt)
             prev_time_dt = split_dt
         return laps
+
+    @property
+    def riders_on_course(self):
+        return sum((
+            1
+            for participant in self._participants.values()
+            if participant.state == ParticipantState.RACING))

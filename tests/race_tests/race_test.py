@@ -312,14 +312,14 @@ class RaceTests(unittest.TestCase):
 
     def test_ReturnsNumberOfRidersOnTheCourse(self):
         sut = Race(laps=1, bibs=[1, 2, 3])
-        self.assertEqual(0, sut.results.riders_on_course)
+        self.assertEqual(0, sut.riders_on_course)
 
         sut.start('12:00:00')
-        self.assertEqual(3, sut.results.riders_on_course)
+        self.assertEqual(3, sut.riders_on_course)
 
         sut.split(1, '12:01:00')
         sut.split(2, '12:01:03')
-        self.assertEqual(1, sut.results.riders_on_course)
+        self.assertEqual(1, sut.riders_on_course)
 
         sut.dnf(3)
-        self.assertEqual(0, sut.results.riders_on_course)
+        self.assertEqual(0, sut.riders_on_course)

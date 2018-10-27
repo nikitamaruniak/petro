@@ -204,7 +204,7 @@ if __name__ == '__main__':
                 'laps': race.laps,
                 'start_time': race.start_time if race.started else 'очікується',
                 'results': [],
-                'riders_on_course': race.results.riders_on_course
+                'riders_on_course': race.riders_on_course
             }
 
             for result in race.results:
