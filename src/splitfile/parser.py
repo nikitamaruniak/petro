@@ -32,6 +32,72 @@ def parse(lines):
     # noqa 501
     >>> list(parse(['foo', 'laps 5', 'start 1 12:13:14', '', '10 12:35:00', 'dnf 7 12:36:00']))
     [(1, 'error'), (2, 'laps', [], 5), (3, 'start', [1], '12:13:14'), (5, 'split', [10], '12:35:00'), (6, 'dnf', [7], '12:36:00')]
+    >>> list(parse([]))
+    []
+    >>> list(parse(['foo']))
+    [(1, 'error')]
+    >>> list(parse(['start 12:00:00']))
+    [(1, 'start', [], '12:00:00')]
+    >>> list(parse(['start 1 12:00:00']))
+    [(1, 'start', [1], '12:00:00')]
+    >>> list(parse(['start 1 2 3 12:00:00']))
+    [(1, 'start', [1, 2, 3], '12:00:00')]
+    >>> list(parse(['start']))
+    [(1, 'error')]
+    >>> list(parse(['start foo 12:00:00']))
+    [(1, 'error')]
+    >>> list(parse(['start 1 foo']))
+    [(1, 'error')]
+    >>> list(parse(['laps 5']))
+    [(1, 'laps', [], 5)]
+    >>> list(parse(['laps 1 5']))
+    [(1, 'laps', [1], 5)]
+    >>> list(parse(['laps 1 2 3 5']))
+    [(1, 'laps', [1, 2, 3], 5)]
+    >>> list(parse(['laps']))
+    [(1, 'error')]
+    >>> list(parse(['laps foo 5']))
+    [(1, 'error')]
+    >>> list(parse(['laps 0']))
+    [(1, 'error')]
+    >>> list(parse(['laps -2']))
+    [(1, 'error')]
+    >>> list(parse(['laps foo']))
+    [(1, 'error')]
+    >>> list(parse(['1 12:00:00']))
+    [(1, 'split', [1], '12:00:00')]
+    >>> list(parse(['1 2 3 12:00:00']))
+    [(1, 'split', [1, 2, 3], '12:00:00')]
+    >>> list(parse(['foo']))
+    [(1, 'error')]
+    >>> list(parse(['1 foo']))
+    [(1, 'error')]
+    >>> list(parse(['foo 12:00:00']))
+    [(1, 'error')]
+    >>> list(parse(['reglist ./reglist.csv']))
+    [(1, 'reglist', './reglist.csv')]
+    >>> list(parse(['reglist ./RegList.csv']))
+    [(1, 'reglist', './RegList.csv')]
+    >>> list(parse(['reglist \\'./reg list.csv\\'']))
+    [(1, 'reglist', './reg list.csv')]
+    >>> list(parse(['reglist "./reg list.csv"']))
+    [(1, 'reglist', './reg list.csv')]
+    >>> list(parse(['reglist']))
+    [(1, 'error')]
+    >>> list(parse(['reglist ./reglist1.csv ./reglist2.csv']))
+    [(1, 'error')]
+    >>> list(parse(['dnf 1 12:00:00']))
+    [(1, 'dnf', [1], '12:00:00')]
+    >>> list(parse(['dnf 1 2 12:00:00']))
+    [(1, 'dnf', [1, 2], '12:00:00')]
+    >>> list(parse(['foo 1 12:00:00']))
+    [(1, 'error')]
+    >>> list(parse(['dnf']))
+    [(1, 'error')]
+    >>> list(parse(['dnf foo 12:00:00']))
+    [(1, 'error')]
+    >>> list(parse(['dnf 1 foo']))
+    [(1, 'error')]
     """
     line_number = 1
     for line in lines:
@@ -170,21 +236,6 @@ def _expression(token):
 
 
 def _parse_start(token):
-    """
-    >>> _parse_start(['foo']) # is None
-    >>> _parse_start(['start', '12:00:00'])
-    ('start', [], '12:00:00')
-    >>> _parse_start(['start', '1', '12:00:00'])
-    ('start', [1], '12:00:00')
-    >>> _parse_start(['start', '1', '2', '3', '12:00:00'])
-    ('start', [1, 2, 3], '12:00:00')
-    >>> _parse_start(['start'])
-    ('error',)
-    >>> _parse_start(['start', 'foo', '12:00:00'])
-    ('error',)
-    >>> _parse_start(['start', '1', 'foo'])
-    ('error',)
-    """
     if token[0] != 'start':
         return None
     if len(token) == 1:
@@ -199,25 +250,6 @@ def _parse_start(token):
 
 
 def _parse_laps(token):
-    """
-    >>> _parse_laps(['foo']) # is None
-    >>> _parse_laps(['laps', '5'])
-    ('laps', [], 5)
-    >>> _parse_laps(['laps', '1', '5'])
-    ('laps', [1], 5)
-    >>> _parse_laps(['laps', '1', '2', '3', '5'])
-    ('laps', [1, 2, 3], 5)
-    >>> _parse_laps(['laps'])
-    ('error',)
-    >>> _parse_laps(['laps', 'foo', '5'])
-    ('error',)
-    >>> _parse_laps(['laps', '0'])
-    ('error',)
-    >>> _parse_laps(['laps', '-2'])
-    ('error',)
-    >>> _parse_laps(['laps', 'foo'])
-    ('error',)
-    """
     if token[0] != 'laps':
         return None
     if len(token) == 1:
@@ -235,20 +267,6 @@ def _parse_laps(token):
 
 
 def _parse_split(token):
-    """
-    >>> _parse_split(['1', '12:00:00'])
-    ('split', [1], '12:00:00')
-    >>> _parse_split(['1', '2', '3', '12:00:00'])
-    ('split', [1, 2, 3], '12:00:00')
-    >>> _parse_split([])
-    ('error',)
-    >>> _parse_split(['foo'])
-    ('error',)
-    >>> _parse_split(['1', 'foo'])
-    ('error',)
-    >>> _parse_split(['foo', '12:00:00'])
-    ('error',)
-    """
     if len(token) < 2:
         return _error()
     bibs = _parse_bibs(token[:-1])
@@ -261,21 +279,6 @@ def _parse_split(token):
 
 
 def _parse_reglist(token):
-    """
-    >>> _parse_reglist(['foo']) # is None
-    >>> _parse_reglist(['reglist', './reglist.csv'])
-    ('reglist', './reglist.csv')
-    >>> _parse_reglist(['reglist', './RegList.csv'])
-    ('reglist', './RegList.csv')
-    >>> _parse_reglist(['reglist', '\\'./reg list.csv\\''])
-    ('reglist', './reg list.csv')
-    >>> _parse_reglist(['reglist', '"./reg list.csv"'])
-    ('reglist', './reg list.csv')
-    >>> _parse_reglist(['reglist'])
-    ('error',)
-    >>> _parse_reglist(['reglist', './reglist1.csv', './reglist2.csv'])
-    ('error',)
-    """
     if token[0] != 'reglist':
         return None
     if len(token) != 2:
@@ -363,19 +366,6 @@ def _parse_bibs(token):
 
 
 def _parse_dnf(token):
-    """
-    >>> _parse_dnf(['dnf', '1', '12:00:00'])
-    ('dnf', [1], '12:00:00')
-    >>> _parse_dnf(['dnf', '1', '2', '12:00:00'])
-    ('dnf', [1, 2], '12:00:00')
-    >>> _parse_dnf(['foo', 1, '12:00:00']) # is None
-    >>> _parse_dnf(['dnf'])
-    ('error',)
-    >>> _parse_dnf(['dnf', 'foo', '12:00:00'])
-    ('error',)
-    >>> _parse_dnf(['dnf', 1, 'foo'])
-    ('error',)
-    """
     if token[0] != 'dnf':
         return None
     bibs = _parse_bibs(token[1:-1])
