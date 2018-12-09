@@ -11,18 +11,15 @@ def parse(lines):
         Supported expressions:
         <bib> [<bib> ... <bib>] <time>
         start [<cid> ... <cid>] <time>
-        finish [<cid> ... <cid>] <time>
         laps [<cid> ... <cid>] <laps>
         reglist <path>
         dnf <bib> <time>
-        itt
 
         bib - bib number - positive number starting from zero.
         cid - category id - positive number starting from 1.
         laps - number of laps - positive number starting from 1.
         path - absolute or relative path to the bikeportal reglist file - string.
         time - time of a day - time representation as a string in the hh:mm:ss format.
-        itt - indicates that the race is an Individual Time Trial race.
 
         Comments:
         Two consecutive dashes mean start of the comment (--). They and
@@ -33,8 +30,8 @@ def parse(lines):
         * Trailing spaces and tabs are ignored.
         * Sequences of spaces or tabs have the same meaning as a one symbol.
     # noqa 501
-    >>> list(parse(['itt', '', 'foo', 'laps 5', 'start 1 12:13:14', '10 12:35:00', 'dnf 7 12:36:00']))
-    [(1, 'itt'), (3, 'error'), (4, 'laps', [], 5), (5, 'start', [1], (12, 13, 14)), (6, 'split', [10], (12, 35, 0)), (7, 'dnf', [7], (12, 36, 0))]
+    >>> list(parse(['foo', 'laps 5', 'start 1 12:13:14', '10 12:35:00', 'dnf 7 12:36:00']))
+    [(1, 'error'), (2, 'laps', [], 5), (3, 'start', [1], (12, 13, 14)), (4, 'split', [10], (12, 35, 0)), (5, 'dnf', [7], (12, 36, 0))]
     """
     line_number = 1
     for line in lines:
@@ -189,35 +186,6 @@ def _parse_start(token):
     if _is_error(start_time):
         return start_time
     return expression.START, cids, start_time
-
-
-def _parse_finish(token):
-    """
-    >>> _parse_finish(['foo']) # is None
-    >>> _parse_finish(['finish', '12:00:00'])
-    ('finish', [], (12, 0, 0))
-    >>> _parse_finish(['finish', '1', '12:00:00'])
-    ('finish', [1], (12, 0, 0))
-    >>> _parse_finish(['finish', '1', '2', '3', '12:00:00'])
-    ('finish', [1, 2, 3], (12, 0, 0))
-    >>> _parse_finish(['finish'])
-    ('error',)
-    >>> _parse_finish(['finish', 'foo', '12:00:00'])
-    ('error',)
-    >>> _parse_finish(['finish', '1', 'foo'])
-    ('error',)
-    """
-    if token[0] != 'finish':
-        return None
-    if len(token) == 1:
-        return _error()
-    cids = _parse_category_ids(token[1:-1])
-    if _is_error(cids):
-        return cids
-    finish_time = _parse_time(token[-1])
-    if _is_error(finish_time):
-        return finish_time
-    return expression.FINISH, cids, finish_time
 
 
 def _parse_laps(token):
@@ -384,23 +352,6 @@ def _parse_bibs(token):
     return bibs
 
 
-def _parse_itt(token):
-    """
-    >>> _parse_itt(['itt'])
-    ('itt',)
-    >>> _parse_itt(['itt', 'foo'])
-    ('error',)
-    >>> _parse_itt(['itta']) # is None
-    """
-    if token[0] != 'itt':
-        return None
-
-    if len(token) != 1:
-        return _error()
-
-    return expression.ITT,
-
-
 def _parse_dnf(token):
     """
     >>> _parse_dnf(['dnf', '1', '12:00:00'])
@@ -428,10 +379,8 @@ def _parse_dnf(token):
 
 _parsers = [
     _parse_start,
-    _parse_finish,
     _parse_laps,
     _parse_reglist,
-    _parse_itt,
     _parse_dnf,
     _parse_split,
     lambda _: _error()
