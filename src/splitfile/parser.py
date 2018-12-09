@@ -81,6 +81,10 @@ def _token(line):
     []
     >>> _token('foo baz-bar')
     ['foo', 'baz-bar']
+    >>> _token('foo -2')
+    ['foo', '-2']
+    >>> _token('foo 2- 3')
+    ['foo', '2-', '3']
     >>> _token('foo baz --bar qux')
     ['foo', 'baz']
 
@@ -96,6 +100,12 @@ def _token(line):
     token = []
     while i < n:
         c = line[i]
+
+        if c != '-' and comment_start != -1:
+            if token_start == -1:
+                token_start = comment_start
+            comment_start = -1
+
         is_white = c == ' ' or c == '\t' or c == '\n'
         if is_white:
             if quote_start == -1 and token_start != -1:
