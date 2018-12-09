@@ -31,7 +31,7 @@ def parse(lines):
         * Sequences of spaces or tabs have the same meaning as a one symbol.
     # noqa 501
     >>> list(parse(['foo', 'laps 5', 'start 1 12:13:14', '10 12:35:00', 'dnf 7 12:36:00']))
-    [(1, 'error'), (2, 'laps', [], 5), (3, 'start', [1], (12, 13, 14)), (4, 'split', [10], (12, 35, 0)), (5, 'dnf', [7], (12, 36, 0))]
+    [(1, 'error'), (2, 'laps', [], 5), (3, 'start', [1], '12:13:14'), (4, 'split', [10], '12:35:00'), (5, 'dnf', [7], '12:36:00')]
     """
     line_number = 1
     for line in lines:
@@ -163,11 +163,11 @@ def _parse_start(token):
     """
     >>> _parse_start(['foo']) # is None
     >>> _parse_start(['start', '12:00:00'])
-    ('start', [], (12, 0, 0))
+    ('start', [], '12:00:00')
     >>> _parse_start(['start', '1', '12:00:00'])
-    ('start', [1], (12, 0, 0))
+    ('start', [1], '12:00:00')
     >>> _parse_start(['start', '1', '2', '3', '12:00:00'])
-    ('start', [1, 2, 3], (12, 0, 0))
+    ('start', [1, 2, 3], '12:00:00')
     >>> _parse_start(['start'])
     ('error',)
     >>> _parse_start(['start', 'foo', '12:00:00'])
@@ -227,9 +227,9 @@ def _parse_laps(token):
 def _parse_split(token):
     """
     >>> _parse_split(['1', '12:00:00'])
-    ('split', [1], (12, 0, 0))
+    ('split', [1], '12:00:00')
     >>> _parse_split(['1', '2', '3', '12:00:00'])
-    ('split', [1, 2, 3], (12, 0, 0))
+    ('split', [1, 2, 3], '12:00:00')
     >>> _parse_split([])
     ('error',)
     >>> _parse_split(['foo'])
@@ -312,17 +312,17 @@ def _parse_time(token):
     >>> _parse_time('25:00:00')
     ('error',)
     >>> _parse_time('00:00:00')
-    (0, 0, 0)
+    '00:00:00'
     >>> _parse_time('23:59:59')
-    (23, 59, 59)
+    '23:59:59'
     >>> _parse_time('13:14:15')
-    (13, 14, 15)
+    '13:14:15'
     """
     try:
-        tm = time.strptime(token, '%H:%M:%S')
+        time.strptime(token, '%H:%M:%S')
     except ValueError:
         return _error()
-    return tm.tm_hour, tm.tm_min, tm.tm_sec
+    return token
 
 
 def _parse_bibs(token):
@@ -355,9 +355,9 @@ def _parse_bibs(token):
 def _parse_dnf(token):
     """
     >>> _parse_dnf(['dnf', '1', '12:00:00'])
-    ('dnf', [1], (12, 0, 0))
+    ('dnf', [1], '12:00:00')
     >>> _parse_dnf(['dnf', '1', '2', '12:00:00'])
-    ('dnf', [1, 2], (12, 0, 0))
+    ('dnf', [1, 2], '12:00:00')
     >>> _parse_dnf(['foo', 1, '12:00:00']) # is None
     >>> _parse_dnf(['dnf'])
     ('error',)

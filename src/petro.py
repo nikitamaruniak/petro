@@ -12,13 +12,6 @@ from reglist import Reglist
 import splitfile
 
 
-def _time_str(time_tuple):
-    return '{:02}:{:02}:{:02}'.format(
-        time_tuple[0],
-        time_tuple[1],
-        time_tuple[2])
-
-
 def _state_ua_str(state):
     if state == ParticipantState.FINISHED:
         return 'Фінішував'
@@ -97,7 +90,7 @@ if __name__ == '__main__':
                         elif races[id].started:
                             _error(line_number, 'Duplicate start statement.')
                         else:
-                            races[id].start(_time_str(time_tuple))
+                            races[id].start(time_tuple)
             elif etype == splitfile.expression.DNF:
                 if reglist is None:
                     _error(line_number, 'Reglist is not specified.')
@@ -116,7 +109,6 @@ if __name__ == '__main__':
                     _error(line_number, 'Reglist is not specified.')
                 else:
                     bibs, time_tuple = params
-                    time_str = _time_str(time_tuple)
                     for bib in bibs:
                         participant = reglist.participant(bib)
                         if not participant:
@@ -124,7 +116,7 @@ if __name__ == '__main__':
                         elif participant.category_id not in races:
                             _error(line_number, 'Laps are not specified.')
                         else:
-                            races[participant.category_id].split(participant.bib, time_str)
+                            races[participant.category_id].split(participant.bib, time_tuple)
         except ValueError as e:
             _error(line_number, repr(e))
 
