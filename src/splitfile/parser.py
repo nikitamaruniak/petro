@@ -30,8 +30,8 @@ def parse(lines):
         * Trailing spaces and tabs are ignored.
         * Sequences of spaces or tabs have the same meaning as a one symbol.
     # noqa 501
-    >>> list(parse(['foo', 'laps 5', 'start 1 12:13:14', '10 12:35:00', 'dnf 7 12:36:00']))
-    [(1, 'error'), (2, 'laps', [], 5), (3, 'start', [1], '12:13:14'), (4, 'split', [10], '12:35:00'), (5, 'dnf', [7], '12:36:00')]
+    >>> list(parse(['foo', 'laps 5', 'start 1 12:13:14', '', '10 12:35:00', 'dnf 7 12:36:00']))
+    [(1, 'error'), (2, 'laps', [], 5), (3, 'start', [1], '12:13:14'), (5, 'split', [10], '12:35:00'), (6, 'dnf', [7], '12:36:00')]
     """
     line_number = 1
     for line in lines:
