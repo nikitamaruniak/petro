@@ -95,7 +95,7 @@ if __name__ == '__main__':
                 if reglist is None:
                     _error(line_number, 'Reglist is not specified.')
                 else:
-                    bibs, _ = params
+                    bibs = params[0]
                     for bib in bibs:
                         participant = reglist.participant(bib)
                         if not participant:
