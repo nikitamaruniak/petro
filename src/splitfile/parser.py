@@ -5,124 +5,148 @@ from . import expression
 
 def parse(lines):
     """
-    Converts an iterator of strings into an iterator of expressions.
+    Parses a series of strings
 
-    Syntax:
-        Supported expressions:
-        <bib> [<bib> ...] <time>
-        start <cid> [<cid> ...] <time>
-        laps <cid> [<cid> ...] <laps> [<time>]
-        reglist <path> [<time>]
-        dnf <bib> [<time>]
+    Supported expressions:
+      * <bib> [<bib> ...] <time>
+      * start <cid> [<cid> ...] <time>
+      * laps <cid> [<cid> ...] <laps> [<time>]
+      * reglist <path> [<time>]
+      * dnf <bib> [<time>]
+    Where:
+      * bib - bib number, positive number starting from zero.
+      * cid - category id, positive number starting from 1.
+      * laps - number of laps, positive number starting from 1.
+      * path - absolute or relative path to a bikeportal reglist file, string.
+      * time - time of a day, string in the hh:mm:ss format.
 
-        bib - bib number - positive number starting from zero.
-        cid - category id - positive number starting from 1.
-        laps - number of laps - positive number starting from 1.
-        path - absolute or relative path to the bikeportal reglist file - string.
-        time - time of a day - time representation as a string in the hh:mm:ss format.
+    Comments:
+      Two consecutive dashes means start of the comment (--). They and
+      everything that follows them till the end of a line is ignored.
 
-        Comments:
-        Two consecutive dashes mean start of the comment (--). They and
-        everything that follows them till the end of line is ignored.
+    Whitespace:
+      * Empty lines have no special meaning.
+      * Trailing spaces and tabs are ignored.
+      * Sequences of spaces or tabs have the same meaning as a one symbol.
 
-        Whitespace:
-        * Empty lines have no special meaning.
-        * Trailing spaces and tabs are ignored.
-        * Sequences of spaces or tabs have the same meaning as a one symbol.
-    # noqa 501
-    >>> list(parse(['foo', 'laps 1 5', 'start 1 12:13:14', '', '10 12:35:00', 'dnf 7 12:36:00']))
-    [(1, 'error'), (2, 'laps', [1], 5), (3, 'start', [1], '12:13:14'), (5, 'split', [10], '12:35:00'), (6, 'dnf', [7])]
-    >>> list(parse([]))
-    []
-    >>> list(parse(['foo']))
-    [(1, 'error')]
+    :param lines: iterable of strings.
+    :returns: an iterator of expressions presented as tuples
+              (line_number, expression, *expression_params).
 
-    >>> list(parse(['start 1 12:00:00']))
-    [(1, 'start', [1], '12:00:00')]
-    >>> list(parse(['start 1 12:00:00\\n']))
-    [(1, 'start', [1], '12:00:00')]
-    >>> list(parse(['start 1 2 3 12:00:00']))
-    [(1, 'start', [1, 2, 3], '12:00:00')]
-    >>> list(parse(['start']))
-    [(1, 'error')]
-    >>> list(parse(['start 12:00:00']))
-    [(1, 'error')]
-    >>> list(parse(['start foo 12:00:00']))
-    [(1, 'error')]
-    >>> list(parse(['start 1 foo']))
-    [(1, 'error')]
-
-    >>> list(parse(['laps 1 5']))
-    [(1, 'laps', [1], 5)]
-    >>> list(parse(['laps 1 2 3 5']))
-    [(1, 'laps', [1, 2, 3], 5)]
-    >>> list(parse(['laps 1 5 12:00:00']))
-    [(1, 'laps', [1], 5)]
-    >>> list(parse(['laps']))
-    [(1, 'error')]
-    >>> list(parse(['laps 5']))
-    [(1, 'error')]
-    >>> list(parse(['laps foo 5']))
-    [(1, 'error')]
-    >>> list(parse(['laps 0']))
-    [(1, 'error')]
-    >>> list(parse(['laps -2']))
-    [(1, 'error')]
-    >>> list(parse(['laps foo']))
-    [(1, 'error')]
-
-    >>> list(parse(['1 12:00:00']))
-    [(1, 'split', [1], '12:00:00')]
-    >>> list(parse(['1 2 3 12:00:00']))
-    [(1, 'split', [1, 2, 3], '12:00:00')]
-
-    >>> list(parse(['foo']))
-    [(1, 'error')]
-    >>> list(parse(['1 foo']))
-    [(1, 'error')]
-    >>> list(parse(['foo 12:00:00']))
-    [(1, 'error')]
-    >>> list(parse(['foo 1 12:00:00']))
-    [(1, 'error')]
-
-    >>> list(parse(['reglist ./reglist.csv']))
-    [(1, 'reglist', './reglist.csv')]
-    >>> list(parse(['reglist ./RegList.csv']))
-    [(1, 'reglist', './RegList.csv')]
-    >>> list(parse(['reglist \\'./reg list.csv\\'']))
-    [(1, 'reglist', './reg list.csv')]
-    >>> list(parse(['reglist "./reg list.csv"']))
-    [(1, 'reglist', './reg list.csv')]
-    >>> list(parse(['reglist "./reg list.csv" 12:00:00']))
-    [(1, 'reglist', './reg list.csv')]
-    >>> list(parse(['reglist']))
-    [(1, 'error')]
-    >>> list(parse(['reglist ./reglist1.csv ./reglist2.csv']))
-    [(1, 'error')]
-
-    >>> list(parse(['dnf 1']))
-    [(1, 'dnf', [1])]
-    >>> list(parse(['dnf 1 2']))
-    [(1, 'dnf', [1, 2])]
-    >>> list(parse(['dnf 1 2 12:00:00']))
-    [(1, 'dnf', [1, 2])]
-    >>> list(parse(['dnf']))
-    [(1, 'error')]
-    >>> list(parse(['dnf foo 12:00:00']))
-    [(1, 'error')]
-    >>> list(parse(['dnf 1 foo']))
-    [(1, 'error')]
+    >>> list(parse([
+    ...     'foo',
+    ...     'laps 1 5',
+    ...     'start 1 12:13:14',
+    ...     '',
+    ...     '10 12:35:00',
+    ...     'dnf 7 12:36:00'
+    ... ]))
+    [\
+(1, 'error')\
+, (2, 'laps', [1], 5)\
+, (3, 'start', [1], '12:13:14')\
+, (5, 'split', [10], '12:35:00')\
+, (6, 'dnf', [7])\
+]
     """
-    line_number = 1
-    for line in lines:
-        t = _token(line)
-        if t:
-            if not _is_error(t):
-                e = _expression(t)
-            else:
-                e = t
-            yield (line_number,) + e
-        line_number += 1
+    for line_number, line in enumerate(lines):
+        e = _parse(line)
+        if e:
+            yield (line_number + 1,) + e
+
+
+def _parse(line):
+    """
+    >>> _parse('') # is None
+    >>> _parse('   ') # is None
+    >>> _parse('-- some comments on an empty line') # is None
+    >>> _parse('foo')
+    ('error',)
+
+    >>> _parse('start 1 12:00:00')
+    ('start', [1], '12:00:00')
+    >>> _parse('start 1 12:00:00\\n')
+    ('start', [1], '12:00:00')
+    >>> _parse('start 1 2 3 12:00:00')
+    ('start', [1, 2, 3], '12:00:00')
+    >>> _parse('start')
+    ('error',)
+    >>> _parse('start 12:00:00')
+    ('error',)
+    >>> _parse('start foo 12:00:00')
+    ('error',)
+    >>> _parse('start 1 foo')
+    ('error',)
+
+    >>> _parse('laps 1 5')
+    ('laps', [1], 5)
+    >>> _parse('laps 1 2 3 5')
+    ('laps', [1, 2, 3], 5)
+    >>> _parse('laps 1 5 12:00:00')
+    ('laps', [1], 5)
+    >>> _parse('laps')
+    ('error',)
+    >>> _parse('laps 5')
+    ('error',)
+    >>> _parse('laps foo 5')
+    ('error',)
+    >>> _parse('laps 0')
+    ('error',)
+    >>> _parse('laps -2')
+    ('error',)
+    >>> _parse('laps foo')
+    ('error',)
+
+    >>> _parse('1 12:00:00')
+    ('split', [1], '12:00:00')
+    >>> _parse('1 2 3 12:00:00')
+    ('split', [1, 2, 3], '12:00:00')
+
+    >>> _parse('foo')
+    ('error',)
+    >>> _parse('1 foo')
+    ('error',)
+    >>> _parse('foo 12:00:00')
+    ('error',)
+    >>> _parse('foo 1 12:00:00')
+    ('error',)
+
+    >>> _parse('reglist ./reglist.csv')
+    ('reglist', './reglist.csv')
+    >>> _parse('reglist ./RegList.csv')
+    ('reglist', './RegList.csv')
+    >>> _parse('reglist \\'./reg list.csv\\'')
+    ('reglist', './reg list.csv')
+    >>> _parse('reglist "./reg list.csv"')
+    ('reglist', './reg list.csv')
+    >>> _parse('reglist "./reg list.csv" 12:00:00')
+    ('reglist', './reg list.csv')
+    >>> _parse('reglist')
+    ('error',)
+    >>> _parse('reglist ./reglist1.csv ./reglist2.csv')
+    ('error',)
+
+    >>> _parse('dnf 1')
+    ('dnf', [1])
+    >>> _parse('dnf 1 2')
+    ('dnf', [1, 2])
+    >>> _parse('dnf 1 2 12:00:00')
+    ('dnf', [1, 2])
+    >>> _parse('dnf')
+    ('error',)
+    >>> _parse('dnf foo 12:00:00')
+    ('error',)
+    >>> _parse('dnf 1 foo')
+    ('error',)
+    """
+    t = _token(line)
+    if not t:
+        return None
+    if not _is_error(t):
+        e = _expression(t)
+    else:
+        e = t
+    return e
 
 
 def _token(line):
