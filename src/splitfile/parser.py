@@ -1,4 +1,5 @@
-import time
+from parsley import makeGrammar
+import ometa
 
 from . import expression
 
@@ -139,305 +140,89 @@ def _parse(line):
     >>> _parse('dnf 1 foo')
     ('error',)
     """
-    t = _token(line)
-    if not t:
-        return None
-    if not _is_error(t):
-        e = _expression(t)
-    else:
-        e = t
-    return e
-
-
-def _token(line):
-    """
-    >>> _token('')
-    []
-    >>> _token('\t')
-    []
-    >>> _token('   ')
-    []
-    >>> _token('   foo')
-    ['foo']
-    >>> _token('foo  ')
-    ['foo']
-    >>> _token('foo baz bar')
-    ['foo', 'baz', 'bar']
-
-    >>> _token('foo \\'baz bar\\'')
-    ['foo', "'baz bar'"]
-    >>> _token('foo "baz bar"')
-    ['foo', '"baz bar"']
-    >>> _token('"  baz  bar "')
-    ['"  baz  bar "']
-    >>> _token('\\'  baz  bar \\'')
-    ["'  baz  bar '"]
-    >>> _token('\\'  baz " bar \\'')
-    ['\\'  baz " bar \\'']
-    >>> _token('"  baz \\' bar "')
-    ['"  baz \\' bar "']
-    >>> _token('foo"baz')
-    ['foo"baz']
-    >>> _token('foo "baz')
-    ('error',)
-
-    >>> _token('--foo baz bar')
-    []
-    >>> _token('foo baz-bar')
-    ['foo', 'baz-bar']
-    >>> _token('foo -2')
-    ['foo', '-2']
-    >>> _token('foo 2- 3')
-    ['foo', '2-', '3']
-    >>> _token('foo baz --bar qux')
-    ['foo', 'baz']
-
-    >>> _token('foo\\n')
-    ['foo']
-    """
-    n = len(line)
-    comment_start = -1
-    token_start = -1
-    quote_start = -1
-    quote_start_type = None
-    i = 0
-    token = []
-    while i < n:
-        c = line[i]
-
-        if c != '-' and comment_start != -1:
-            if token_start == -1:
-                token_start = comment_start
-            comment_start = -1
-
-        is_white = c == ' ' or c == '\t' or c == '\n'
-        if is_white:
-            if quote_start == -1 and token_start != -1:
-                token.append(line[token_start:i])
-                token_start = -1
-            i += 1
-        elif c == '"' or c == '\'':
-            quote_type = 'double' if c == '"' else 'single'
-            if quote_start == -1:
-                if token_start == -1:
-                    quote_start_type = quote_type
-                    quote_start = i
-                    token_start = i
-            elif quote_start_type == quote_type:
-                token.append(line[token_start:i + 1])
-                token_start = -1
-                quote_start = -1
-                quote_start_type = None
-            i += 1
-        elif c == '-':
-            if comment_start == -1:
-                comment_start = i
-            else:
-                if token_start != -1:
-                    token.append(line[token_start:comment_start])
-                    token_start = -1
-                i = n
-            i += 1
-        else:
-            if token_start == -1:
-                token_start = i
-            comment_start = -1
-            i += 1
-
-    if token_start != -1:
-        if quote_start == -1:
-            token.append(line[token_start:])
-        else:
-            return _error()
-
-    return token
-
-
-def _strip_comments(line):
-    """
-    >>> _strip_comments('foo')
-    'foo'
-    >>> _strip_comments('foo --baz bar')
-    'foo '
-    """
-    comment_start = line.find('--')
-    if comment_start != -1:
-        line = line[:comment_start]
-    return line
-
-
-def _expression(token):
-    for _parser in _parsers:
-        e = _parser(token)
-        if e is not None:
-            return e
-
-
-def _parse_start(token):
-    if token[0] != 'start':
-        return None
-    if len(token) == 1:
-        return _error()
-    cids = _parse_category_ids(token[1:-1])
-    if _is_error(cids):
-        return cids
-    start_time = _parse_time(token[-1])
-    if _is_error(start_time):
-        return start_time
-    return expression.START, cids, start_time
-
-
-def _parse_laps(token):
-    if token[0] != 'laps':
-        return None
-    if len(token) == 1:
-        return _error()
-    if not _is_error(_parse_time(token[-1])):
-        token = token[:-1]
-    cids = _parse_category_ids(token[1:-1])
-    if _is_error(cids):
-        return cids
     try:
-        laps = int(token[-1])
-    except ValueError:
-        return _error()
-    if laps < 1:
-        return _error()
-    return expression.LAPS, cids, laps
+        return _parser(line).specification()
+    except ometa.runtime.ParseError:
+        return (expression.SYNTAX_ERROR,)
 
 
-def _parse_split(token):
-    if len(token) < 2:
-        return _error()
-    bibs = _parse_bibs(token[:-1])
-    if _is_error(bibs):
-        return bibs
-    split_time = _parse_time(token[-1])
-    if _is_error(split_time):
-        return split_time
-    return expression.SPLIT, bibs, split_time
+_specification = """
+ws = ' ' | '\t' | '\n'
+space = ws+
+optional_space = ws*
 
+zero = '0'
+digit = anything:x ?(x in '0123456789') -> x
+digit1_9 = anything:x ?(x in '123456789') -> x
 
-def _parse_reglist(token):
-    if token[0] != 'reglist':
-        return None
-    if not _is_error(_parse_time(token[-1])):
-        token = token[:-1]
-    if len(token) != 2:
-        return _error()
-    path = token[1]
-    path = path.strip('\'')
-    path = path.strip('\"')
-    return expression.REGLIST, path
+hours = <digit{2}>:x ?(int(x) < 24) -> x
+minutes = <digit{2}>:x ?(int(x) < 60) -> x
+seconds = minutes
 
+time = <hours ':' minutes ':' seconds>
 
-def _parse_category_ids(token):
-    """
-    >>> _parse_category_ids([])
-    ('error',)
-    >>> _parse_category_ids([1])
-    [1]
-    >>> _parse_category_ids([1, 2, 3])
-    [1, 2, 3]
-    >>> _parse_category_ids([1, 'foo', 3])
-    ('error',)
-    >>> _parse_category_ids([1, 0, 3])
-    ('error',)
-    >>> _parse_category_ids([1, -2, 3])
-    ('error',)
-    """
-    if not token:
-        return _error()
-    try:
-        cids = list(map(int, token))
-    except ValueError:
-        return _error()
-    for cid in cids:
-        if cid < 1:
-            return _error()
-    return cids
+positive_number = <~time digit1_9 digit*>:x -> int(x)
+natural_number = (~time positive_number | zero):x -> int(x)
 
+bib = natural_number
+bibs = bib:first (space bib)*:rest -> [first] + rest
 
-def _parse_time(token):
-    """
-    >>> _parse_time('')
-    ('error',)
-    >>> _parse_time('foo')
-    ('error',)
-    >>> _parse_time('24:00:00')
-    ('error',)
-    >>> _parse_time('25:00:00')
-    ('error',)
-    >>> _parse_time('00:00:00')
-    '00:00:00'
-    >>> _parse_time('23:59:59')
-    '23:59:59'
-    >>> _parse_time('13:14:15')
-    '13:14:15'
-    """
-    try:
-        time.strptime(token, '%H:%M:%S')
-    except ValueError:
-        return _error()
-    return token
+split = bibs:bibs space time:time -> Split(bibs, time)
 
+optional_timestamp = (space time)?
 
-def _parse_bibs(token):
-    """
-    >>> _parse_bibs([])
-    ('error',)
-    >>> _parse_bibs([0])
-    [0]
-    >>> _parse_bibs([1])
-    [1]
-    >>> _parse_bibs([11])
-    [11]
-    >>> _parse_bibs([1, 2, 3])
-    [1, 2, 3]
-    >>> _parse_bibs([1, 'foo', 3])
-    ('error',)
-    >>> _parse_bibs([1, -2, 3])
-    ('error',)
-    """
-    try:
-        bibs = list(map(int, token))
-    except ValueError:
-        return _error()
-    if not bibs:
-        return _error()
-    for bib in bibs:
-        if bib < 0:
-            return _error()
-    return bibs
+dnf = 'dnf' space bibs:bibs optional_timestamp -> Dnf(bibs)
 
+number_of_laps = positive_number
+category = number_of_laps
 
-def _parse_dnf(token):
-    if token[0] != 'dnf':
-        return None
-    if not _is_error(_parse_time(token[-1])):
-        token = token[:-1]
-    bibs = _parse_bibs(token[1:])
-    if _is_error(bibs):
-        return bibs
-    return expression.DNF, bibs
+categories = category:first (space category)*:rest -> [first] + rest
 
+start =
+    'start'
+    space categories:categories
+    space time:time -> Start(categories, time)
 
-_parsers = [
-    _parse_start,
-    _parse_laps,
-    _parse_reglist,
-    _parse_dnf,
-    _parse_split,
-    lambda _: _error()
-]
+laps =
+    'laps'
+    space category:first
+    (space category | number_of_laps)+:rest
+    optional_timestamp -> Laps([first] + rest[:-1], rest[-1])
 
+single_quote = '\\\''
+double_quote = '"'
 
-def _error():
-    return expression.SYNTAX_ERROR,
+char = ~ws ~single_quote ~double_quote anything
 
+string =
+      (single_quote <(char | space)*>:s single_quote) -> s
+    | (double_quote <(char | space)*>:s double_quote) -> s
+    | <char*>:s -> s
 
-def _is_error(exp):
-    return \
-        isinstance(exp, tuple) \
-        and len(exp) > 0 \
-        and exp[0] == expression.SYNTAX_ERROR
+reglist =
+    'reglist'
+    space string:filepath
+    optional_timestamp -> Reglist(filepath)
+
+comment = '--' anything*
+
+statement = reglist | laps | start | split | dnf
+
+specification =
+    optional_space statement?:stmt optional_space comment? -> stmt
+"""
+
+_factories = {
+    'Split':
+        lambda bibs, ts: (expression.SPLIT, bibs, ts),
+    'Dnf':
+        lambda bibs: (expression.DNF, bibs),
+    'Start':
+        lambda categories, ts: (expression.START, categories, ts),
+    'Laps':
+        lambda categories, num_laps: (expression.LAPS, categories, num_laps),
+    'Reglist':
+        lambda filepath: (expression.REGLIST, filepath),
+}
+
+_parser = makeGrammar(_specification, _factories)
