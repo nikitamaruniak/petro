@@ -57,76 +57,73 @@ def _results(input_path):
     reglist = None
     races = {}
     for expression in splitfile.open_split(input_path):
-        try:
-            line_number, etype, *params = expression
+        line_number, etype, *params = expression
 
-            if etype == splitfile.expression.SYNTAX_ERROR:
-                _error(line_number, 'Syntax error.')
-            elif etype == splitfile.expression.REGLIST:
-                path = params[0]
-                if not os.path.isabs(path):
-                    path = os.path.abspath(
-                        os.path.join(
-                            os.path.abspath(
-                                os.path.dirname(input_path)),
-                            path))
-                if reglist is None:
-                    reglist = Reglist.open(path)
-                else:
-                    _error(line_number, 'Duplicate reglist statement.')
-            elif etype == splitfile.expression.LAPS:
-                if reglist is None:
-                    _error(line_number, 'Reglist is not specified.')
-                else:
-                    category_ids, laps = params
-                    for id in category_ids:
-                        if id in races:
-                            _error(line_number, 'Duplicate laps statement.')
-                        elif reglist.participants(id) is None:
-                            _error(line_number, 'Category not found.')
-                        else:
-                            bibs = [p.bib for p in reglist.participants(id) if p.bib is not None]
-                            races[id] = Race(laps=laps, bibs=bibs)
-            elif etype == splitfile.expression.START:
-                if reglist is None:
-                    _error(line_number, 'Reglist is not specified.')
-                else:
-                    category_ids, time_tuple = params
-                    for id in category_ids:
-                        if id not in races:
-                            _error(line_number, 'Category not found or laps are not specified.')
-                        elif races[id].started:
-                            _error(line_number, 'Duplicate start statement.')
-                        else:
-                            races[id].start(time_tuple)
-            elif etype == splitfile.expression.DNF:
-                if reglist is None:
-                    _error(line_number, 'Reglist is not specified.')
-                else:
-                    bibs = params[0]
-                    for bib in bibs:
-                        participant = reglist.participant(bib)
-                        if not participant:
-                            _error(line_number, 'Participant not found.')
-                        if participant.category_id not in races:
-                            _error(line_number, 'Laps are not specified.')
-                        else:
-                            races[participant.category_id].dnf(participant.bib)
-            elif etype == splitfile.expression.SPLIT:
-                if reglist is None:
-                    _error(line_number, 'Reglist is not specified.')
-                else:
-                    bibs, time_tuple = params
-                    for bib in bibs:
-                        participant = reglist.participant(bib)
-                        if not participant:
-                            _error(line_number, 'Participant not found.')
-                        elif participant.category_id not in races:
-                            _error(line_number, 'Laps are not specified.')
-                        else:
-                            races[participant.category_id].split(participant.bib, time_tuple)
-        except ValueError as e:
-            _error(line_number, repr(e))
+        if etype == splitfile.expression.SYNTAX_ERROR:
+            _error(line_number, 'Syntax error.')
+        elif etype == splitfile.expression.REGLIST:
+            path = params[0]
+            if not os.path.isabs(path):
+                path = os.path.abspath(
+                    os.path.join(
+                        os.path.abspath(
+                            os.path.dirname(input_path)),
+                        path))
+            if reglist is None:
+                reglist = Reglist.open(path)
+            else:
+                _error(line_number, 'Duplicate reglist statement.')
+        elif etype == splitfile.expression.LAPS:
+            if reglist is None:
+                _error(line_number, 'Reglist is not specified.')
+            else:
+                category_ids, laps = params
+                for id in category_ids:
+                    if id in races:
+                        _error(line_number, 'Duplicate laps statement.')
+                    elif reglist.participants(id) is None:
+                        _error(line_number, 'Category not found.')
+                    else:
+                        bibs = [p.bib for p in reglist.participants(id) if p.bib is not None]
+                        races[id] = Race(laps=laps, bibs=bibs)
+        elif etype == splitfile.expression.START:
+            if reglist is None:
+                _error(line_number, 'Reglist is not specified.')
+            else:
+                category_ids, time_tuple = params
+                for id in category_ids:
+                    if id not in races:
+                        _error(line_number, 'Category not found or laps are not specified.')
+                    elif races[id].started:
+                        _error(line_number, 'Duplicate start statement.')
+                    else:
+                        races[id].start(time_tuple)
+        elif etype == splitfile.expression.DNF:
+            if reglist is None:
+                _error(line_number, 'Reglist is not specified.')
+            else:
+                bibs = params[0]
+                for bib in bibs:
+                    participant = reglist.participant(bib)
+                    if not participant:
+                        _error(line_number, 'Participant not found.')
+                    if participant.category_id not in races:
+                        _error(line_number, 'Laps are not specified.')
+                    else:
+                        races[participant.category_id].dnf(participant.bib)
+        elif etype == splitfile.expression.SPLIT:
+            if reglist is None:
+                _error(line_number, 'Reglist is not specified.')
+            else:
+                bibs, time_tuple = params
+                for bib in bibs:
+                    participant = reglist.participant(bib)
+                    if not participant:
+                        _error(line_number, 'Participant not found.')
+                    elif participant.category_id not in races:
+                        _error(line_number, 'Laps are not specified.')
+                    else:
+                        races[participant.category_id].split(participant.bib, time_tuple)
 
     if _error_count > 0:
         sys.exit(2)
