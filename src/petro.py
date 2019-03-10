@@ -23,34 +23,39 @@ def _state_ua_str(state):
         return 'Готується'
 
 
-_error_count = 0
-
-
 def _main(argv):
+    global _error_count
+    _error_count = 0
     help = 'Use: python -m petro.py <path_to_split_file> <csv|html> <path_to_output_file>'
 
     if len(argv) != 4:
         print(help)
-        sys.exit(1)
+        return 1
 
     input_path = argv[1]
     output_format = argv[2]
     output_path = argv[3]
+
+    class TooManyErrors(Exception):
+        pass
 
     def on_error(line_number, message):
         global _error_count
         print('ERROR: Line {}. {}'.format(line_number, message))
         _error_count += 1
         if _error_count == 5:
-            sys.exit(2)
+            raise TooManyErrors()
 
-    races, reglist = _results(input_path, on_error=on_error)
+    try:
+        races, reglist = _results(input_path, on_error=on_error)
+    except TooManyErrors:
+        return 2
 
     if _error_count > 0:
-        sys.exit(2)
+        return 2
 
     if reglist is None:
-        sys.exit(0)
+        return 0
 
     if output_format == 'csv':
         write_csv(output_path, races, reglist)
@@ -227,4 +232,4 @@ def write_html(output_path, races, reglist):
 
 
 if __name__ == '__main__':
-    _main(sys.argv)
+    sys.exit(_main(sys.argv))
