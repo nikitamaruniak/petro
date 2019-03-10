@@ -26,11 +26,38 @@ test_html_output()
     return $exit_code
 }
 
+test_returns_zero_on_empty_input()
+{
+    input_path=$(mktemp)
+    output_path=$(mktemp)
+    python -m petro $input_path csv $output_path
+    exit_code=$?
+    rm -f $input_path $output_path
+    return $exit_code
+}
+
+test_returns_2_on_errors()
+{
+    input_path=$(mktemp)
+    echo '10 12:00:00' >> $input_path
+    output_path=$(mktemp)
+    python -m petro $input_path csv $output_path
+    exit_code=$?
+    rm -f $input_path $output_path
+
+    if [ $exit_code -eq 2 ]
+    then
+        return 0
+    else
+        return 1
+    fi
+}
+
 export PYTHONPATH=../src
 
 failed=0
 
-for test in 'test_csv_output' 'test_html_output'
+for test in 'test_returns_zero_on_empty_input' 'test_csv_output' 'test_html_output' 'test_returns_2_on_errors'
 do
     echo "Executing test '$test'..."
     $test
