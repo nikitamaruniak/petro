@@ -53,6 +53,28 @@ test_returns_2_on_errors()
     fi
 }
 
+test_breaks_on_5_errors()
+{
+    input_path=$(mktemp)
+    echo '10 12:00:00' >> $input_path
+    echo '10 12:00:00' >> $input_path
+    echo '10 12:00:00' >> $input_path
+    echo '10 12:00:00' >> $input_path
+    echo '10 12:00:00' >> $input_path
+    echo '10 12:00:00' >> $input_path
+    output_path=$(mktemp)
+    stdout_path=$(mktemp)
+    python -m petro $input_path csv $output_path | tee $stdout_path
+    n_errors=$(cat $stdout_path | wc -l)
+    rm -f $input_path $output_path $stdout_path
+    if [ $n_errors -eq 5 ]
+    then
+        return 0
+    else
+        return 1
+    fi
+}
+
 export PYTHONPATH=../src
 
 failed=0
