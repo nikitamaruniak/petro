@@ -34,7 +34,7 @@ def _error(line_number, message):
         sys.exit(2)
 
 
-if __name__ == '__main__':
+def _main():
     help = 'Use: python -m petro.py <path_to_split_file> <csv|html> <path_to_output_file>'
 
     if len(sys.argv) != 4:
@@ -127,94 +127,104 @@ if __name__ == '__main__':
         sys.exit(0)
 
     if output_format == 'csv':
-        with open(output_path, mode='wt', encoding='cp1251') as f:
-            writer = csv.writer(f, delimiter=';')
-
-            laps = 0
-            for race in races.values():
-                laps = max(laps, race.laps)
-            header = [
-                'Место',
-                'Номер',
-                'Категория',
-                'Кол-во человек в команде',
-                'userid',
-                '',
-                'Фамилия',
-                'Имя',
-                'Ник',
-                'Команда',
-                'Возраст',
-                'Велосипед',
-                'Город',
-                'Кругов',
-                'Штраф',
-            ]
-            for i in range(1, laps + 1):
-                header.append('Круг{}'.format(i))
-            writer.writerow(header)
-
-            for category_id, category_name in reglist.categories:
-                if category_id not in races:
-                    continue
-                for result in races[category_id].results:
-                    participant = reglist.participant(result.bib)
-                    row = [
-                        result.position if result.state != ParticipantState.DNF else 'Сход',
-                        participant.bib,
-                        category_name,
-                        '',
-                        '',
-                        participant.name,
-                        '',
-                        '',
-                        participant.nickname,
-                        participant.team,
-                        participant.age,
-                        '',
-                        participant.city,
-                        result.laps_done,
-                        ''
-                    ]
-                    row += result.lap_times
-                    row += [''] * (laps - result.laps_done)
-
-                    writer.writerow(row)
+        write_csv(output_path, races, reglist)
     else:
-        context = {
-            'current_time': datetime.datetime.now().strftime('%H:%M:%S'),
-            'races': [],
-        }
+        write_html(output_path, races, reglist)
+
+
+def write_csv(output_path, races, reglist):
+    with open(output_path, mode='wt', encoding='cp1251') as f:
+        writer = csv.writer(f, delimiter=';')
+
+        laps = 0
+        for race in races.values():
+            laps = max(laps, race.laps)
+        header = [
+            'Место',
+            'Номер',
+            'Категория',
+            'Кол-во человек в команде',
+            'userid',
+            '',
+            'Фамилия',
+            'Имя',
+            'Ник',
+            'Команда',
+            'Возраст',
+            'Велосипед',
+            'Город',
+            'Кругов',
+            'Штраф',
+        ]
+        for i in range(1, laps + 1):
+            header.append('Круг{}'.format(i))
+        writer.writerow(header)
 
         for category_id, category_name in reglist.categories:
             if category_id not in races:
                 continue
-            race = races[category_id]
-            laps = race.laps
-            r = {
-                'category_name': category_name,
-                'laps': race.laps,
-                'start_time': race.start_time if race.started else 'очікується',
-                'results': [],
-                'riders_on_course': race.riders_on_course
-            }
-
-            for result in race.results:
+            for result in races[category_id].results:
                 participant = reglist.participant(result.bib)
-                r['results'].append({
-                    'state': _state_ua_str(result.state),
-                    'position': result.position,
-                    'bib': participant.bib,
-                    'name': participant.name,
-                    'team': participant.team,
-                    'city': participant.city,
-                    'age': participant.age,
-                    'laps_done': result.laps_done,
-                    'total_time': result.total_time,
-                    'lap_times': result.lap_times
-                })
-            context['races'].append(r)
+                row = [
+                    result.position if result.state != ParticipantState.DNF else 'Сход',
+                    participant.bib,
+                    category_name,
+                    '',
+                    '',
+                    participant.name,
+                    '',
+                    '',
+                    participant.nickname,
+                    participant.team,
+                    participant.age,
+                    '',
+                    participant.city,
+                    result.laps_done,
+                    ''
+                ]
+                row += result.lap_times
+                row += [''] * (laps - result.laps_done)
 
-        env = Environment(loader=FileSystemLoader(os.path.dirname(__file__)))
-        tpl = env.get_template('petro.html')
-        tpl.stream(context).dump(output_path, encoding='utf-8')
+                writer.writerow(row)
+
+
+def write_html(output_path, races, reglist):
+    context = {
+        'current_time': datetime.datetime.now().strftime('%H:%M:%S'),
+        'races': [],
+    }
+    for category_id, category_name in reglist.categories:
+        if category_id not in races:
+            continue
+        race = races[category_id]
+        laps = race.laps
+        r = {
+            'category_name': category_name,
+            'laps': race.laps,
+            'start_time': race.start_time if race.started else 'очікується',
+            'results': [],
+            'riders_on_course': race.riders_on_course
+        }
+
+        for result in race.results:
+            participant = reglist.participant(result.bib)
+            r['results'].append({
+                'state': _state_ua_str(result.state),
+                'position': result.position,
+                'bib': participant.bib,
+                'name': participant.name,
+                'team': participant.team,
+                'city': participant.city,
+                'age': participant.age,
+                'laps_done': result.laps_done,
+                'total_time': result.total_time,
+                'lap_times': result.lap_times
+            })
+        context['races'].append(r)
+    env = Environment(loader=FileSystemLoader(os.path.dirname(__file__)))
+    tpl = env.get_template('petro.html')
+    tpl.stream(context).dump(output_path, encoding='utf-8')
+
+
+if __name__ == '__main__':
+    _main()
