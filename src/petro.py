@@ -45,9 +45,17 @@ def _main():
     output_format = sys.argv[2]
     output_path = sys.argv[3]
 
+    races, reglist = _results(input_path)
+
+    if output_format == 'csv':
+        write_csv(output_path, races, reglist)
+    else:
+        write_html(output_path, races, reglist)
+
+
+def _results(input_path):
     reglist = None
     races = {}
-
     for expression in splitfile.open_split(input_path):
         try:
             line_number, etype, *params = expression
@@ -126,10 +134,7 @@ def _main():
     if reglist is None:
         sys.exit(0)
 
-    if output_format == 'csv':
-        write_csv(output_path, races, reglist)
-    else:
-        write_html(output_path, races, reglist)
+    return races, reglist
 
 
 def write_csv(output_path, races, reglist):
