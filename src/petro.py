@@ -47,6 +47,12 @@ def _main():
 
     races, reglist = _results(input_path)
 
+    if _error_count > 0:
+        sys.exit(2)
+
+    if reglist is None:
+        sys.exit(0)
+
     if output_format == 'csv':
         write_csv(output_path, races, reglist)
     else:
@@ -124,12 +130,6 @@ def _results(input_path):
                         _error(line_number, 'Laps are not specified.')
                     else:
                         races[participant.category_id].split(participant.bib, time_tuple)
-
-    if _error_count > 0:
-        sys.exit(2)
-
-    if reglist is None:
-        sys.exit(0)
 
     return races, reglist
 
