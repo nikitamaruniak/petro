@@ -26,16 +26,16 @@ def _state_ua_str(state):
 _error_count = 0
 
 
-def _main():
+def _main(argv):
     help = 'Use: python -m petro.py <path_to_split_file> <csv|html> <path_to_output_file>'
 
-    if len(sys.argv) != 4:
+    if len(argv) != 4:
         print(help)
         sys.exit(1)
 
-    input_path = sys.argv[1]
-    output_format = sys.argv[2]
-    output_path = sys.argv[3]
+    input_path = argv[1]
+    output_format = argv[2]
+    output_path = argv[3]
 
     def on_error(line_number, message):
         global _error_count
@@ -227,4 +227,4 @@ def write_html(output_path, races, reglist):
 
 
 if __name__ == '__main__':
-    _main()
+    _main(sys.argv)
