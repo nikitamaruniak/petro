@@ -197,7 +197,6 @@ def write_html(output_path, races, reglist):
         if category_id not in races:
             continue
         race = races[category_id]
-        laps = race.laps
         r = {
             'category_name': category_name,
             'laps': race.laps,
