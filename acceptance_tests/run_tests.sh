@@ -57,7 +57,7 @@ export PYTHONPATH=../src
 
 failed=0
 
-for test in 'test_returns_zero_on_empty_input' 'test_csv_output' 'test_html_output' 'test_returns_2_on_errors'
+for test in $(grep -o -P 'test_.*(?=\(\))' $0)
 do
     echo "Executing test '$test'..."
     $test
