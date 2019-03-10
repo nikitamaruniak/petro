@@ -6,7 +6,7 @@ test: static_analysis unit_tests acceptance_tests
 
 static_analysis:
 	@echo "\n* Running static code analysis...\n"
-	flake8
+	flake8 --max-line-length=100
 
 unit_tests:
 	@echo "\n* Running unit tests...\n"
