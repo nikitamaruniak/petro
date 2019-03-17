@@ -1,3 +1,4 @@
+import argparse
 import sys
 import os
 
@@ -8,18 +9,9 @@ from reglist import Reglist
 import splitfile
 
 
-def _main(argv):
+def _main(input_path, output_format, output_path):
     global _error_count
     _error_count = 0
-    help = 'Use: python -m petro.py <path_to_split_file> <csv|html> <path_to_output_file>'
-
-    if len(argv) != 4:
-        print(help)
-        return 1
-
-    input_path = argv[1]
-    output_format = argv[2]
-    output_path = argv[3]
 
     class TooManyErrors(Exception):
         pass
@@ -126,4 +118,20 @@ def _results(input_path, on_error):
 
 
 if __name__ == '__main__':
-    sys.exit(_main(sys.argv))
+    args_parser = argparse.ArgumentParser(
+        description="""
+            Helps you time cycling or other kinds of sporting events.
+            Process a *.split file and outputs an event results
+            in HTML or bikeportal's CSV formats.
+            """
+        )
+    args_parser.add_argument('path_to_split_file')
+    args_parser.add_argument('output_format', choices=['csv', 'html'])
+    args_parser.add_argument('path_to_output_file')
+
+    args = args_parser.parse_args()
+
+    sys.exit(_main(
+        args.path_to_split_file,
+        args.output_format,
+        args.path_to_output_file))
