@@ -45,7 +45,9 @@
         </style>
 </head>
 <body>
-    <img src='banner.png'/>
+    {% if banner_url %}
+    <img src='{{ banner_url }}'/>
+    {% endif %}
     <p>Час створення протоколу: {{ current_time }}</p>
     {% for race in races %}
         <h1>{{ race.category_name }}</h1>

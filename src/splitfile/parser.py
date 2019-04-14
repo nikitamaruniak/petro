@@ -139,6 +139,16 @@ def _parse(line):
     ('error',)
     >>> _parse('dnf 1 foo')
     ('error',)
+    >>> _parse('banner')
+    ('error',)
+    >>> _parse('banner foo baz bar')
+    ('error',)
+    >>> _parse('banner foo.png')
+    ('banner', 'foo.png')
+    >>> _parse('banner "foo baz bar.png"')
+    ('banner', 'foo baz bar.png')
+    >>> _parse("banner 'foo baz bar.png'")
+    ('banner', 'foo baz bar.png')
     """
     try:
         return _parser(line).specification()
@@ -204,9 +214,14 @@ reglist =
     space string:filepath
     optional_timestamp -> Reglist(filepath)
 
+banner =
+    'banner'
+    space string:url
+    optional_timestamp -> Banner(url)
+
 comment = '--' anything*
 
-statement = reglist | laps | start | split | dnf
+statement = reglist | banner | laps | start | split | dnf
 
 specification =
     optional_space statement?:stmt optional_space comment? -> stmt
@@ -223,6 +238,8 @@ _factories = {
         lambda categories, num_laps: (expression.LAPS, categories, num_laps),
     'Reglist':
         lambda filepath: (expression.REGLIST, filepath),
+    'Banner':
+        lambda url: (expression.BANNER, url)
 }
 
 _parser = makeGrammar(_specification, _factories)

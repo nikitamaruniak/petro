@@ -6,8 +6,9 @@ from jinja2 import Environment, FileSystemLoader
 from race import ParticipantState
 
 
-def write(output_path, races, reglist):
+def write(output_path, races, reglist, banner_url):
     context = {
+        'banner_url': banner_url,
         'current_time': datetime.datetime.now().strftime('%H:%M:%S'),
         'races': [],
     }

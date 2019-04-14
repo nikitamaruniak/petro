@@ -1,5 +1,6 @@
 SYNTAX_ERROR = 'error'
 REGLIST = 'reglist'
+BANNER = 'banner'
 SPLIT = 'split'
 LAPS = 'laps'
 START = 'start'

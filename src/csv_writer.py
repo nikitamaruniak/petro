@@ -3,7 +3,7 @@ import csv
 from race import ParticipantState
 
 
-def write(output_path, races, reglist):
+def write(output_path, races, reglist, banner_url):
     with open(output_path, mode='wt', encoding='cp1251') as f:
         writer = csv.writer(f, delimiter=';')
 

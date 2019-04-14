@@ -24,7 +24,7 @@ def _main(input_path, output_format, output_path):
             raise TooManyErrors()
 
     try:
-        races, reglist = _results(input_path, on_error=on_error)
+        races, reglist, banner_url = _results(input_path, on_error=on_error)
     except TooManyErrors:
         return 2
 
@@ -39,11 +39,12 @@ def _main(input_path, output_format, output_path):
         'html': write_html
     }
 
-    writers[output_format](output_path, races, reglist)
+    writers[output_format](output_path, races, reglist, banner_url)
 
 
 def _results(input_path, on_error):
     reglist = None
+    banner_url = None
     races = {}
     for expression in splitfile.open_split(input_path):
         line_number, etype, *params = expression
@@ -62,6 +63,11 @@ def _results(input_path, on_error):
                 reglist = Reglist.open(path)
             else:
                 on_error(line_number, 'Duplicate reglist statement.')
+        elif etype == splitfile.expression.BANNER:
+            if banner_url is None:
+                banner_url = params[0]
+            else:
+                on_error(line_number, 'Duplicate banner statement.')
         elif etype == splitfile.expression.LAPS:
             if reglist is None:
                 on_error(line_number, 'Reglist is not specified.')
@@ -114,7 +120,7 @@ def _results(input_path, on_error):
                     else:
                         races[participant.category_id].split(participant.bib, time_tuple)
 
-    return races, reglist
+    return races, reglist, banner_url
 
 
 if __name__ == '__main__':
