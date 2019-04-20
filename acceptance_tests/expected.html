@@ -24,7 +24,9 @@
             text-align: left;
         }
 
-        @media only screen and (max-width: 400px) {
+        @media
+        only screen and (orientation: portrait) and (max-device-aspect-ratio: 7/10)
+        {
             th:nth-child(1), td:nth-child(1),
             th:nth-child(5), td:nth-child(5),
             th:nth-child(6), td:nth-child(6),
@@ -34,13 +36,8 @@
             }
         }
 
-        @media only screen and (max-width: 800px) {
-            th:nth-child(5), td:nth-child(5),
-            th:nth-child(6), td:nth-child(6),
-            th:nth-child(7), td:nth-child(7)
-            {
-                display:none;
-            }
+        img {
+            width: 300px;
         }
         </style>
 </head>
